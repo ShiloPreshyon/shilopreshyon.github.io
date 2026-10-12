@@ -16,11 +16,23 @@ final class Runner: NSObject, WKNavigationDelegate {
   override init() { super.init(); web.navigationDelegate = self; next() }
   func next() {
     guard i < jobs.count else { exit(0) }
-    web.load(URLRequest(url: URL(string: jobs[i].0)!))
+    // A per-job query makes every job a full page load; a hash-only change (cv#pdf -> cv#pdf,full) wouldn't be.
+    var c = URLComponents(string: jobs[i].0)!
+    c.queryItems = [URLQueryItem(name: "job", value: String(i))]
+    web.load(URLRequest(url: c.url!))
+    armWatchdog()
   }
   func webView(_ w: WKWebView, didFail _: WKNavigation!, withError e: Error) { fail(e) }
   func webView(_ w: WKWebView, didFailProvisionalNavigation _: WKNavigation!, withError e: Error) { fail(e) }
   func webViewWebContentProcessDidTerminate(_ w: WKWebView) { print("✗ WebKit content process died"); exit(1) }
+  // Watchdog: never hang silently. Each job gets 60 s.
+  var watch: DispatchWorkItem?
+  func armWatchdog() {
+    watch?.cancel()
+    let n = i
+    watch = DispatchWorkItem { print("✗ timed out on job \(n + 1) of \(jobs.count)"); exit(1) }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 60, execute: watch!)
+  }
   func fail(_ e: Error) { print("✗ \(jobs[i].0): \(e.localizedDescription)"); exit(1) }
   func webView(_ w: WKWebView, didFinish _: WKNavigation!) {
     Task { @MainActor in
@@ -59,6 +71,5 @@ final class Runner: NSObject, WKNavigationDelegate {
 let app = NSApplication.shared
 app.setActivationPolicy(.prohibited)
 let runner = Runner()
-// Watchdog: never hang silently.
-DispatchQueue.main.asyncAfter(deadline: .now() + 60) { print("✗ timed out on job \(runner.i + 1) of \(jobs.count)"); exit(1) }
+
 app.run()
