@@ -111,8 +111,14 @@
       <button class="btn98" id="collShare">Copy share link</button>
       <button class="btn98" id="collClear">Clear</button>
     </div>
+    <div class="toolbar coll-opts">
+      <label>Master <input type="range" id="collMaster" min="0" max="1" step="0.01"></label>
+      <label>Fade <select id="collFade"><option value="0">off</option><option value="1">1 s</option><option value="2">2 s</option><option value="5">5 s</option><option value="10">10 s</option></select></label>
+      <label title="Each layer starts from a random point"><input type="checkbox" id="collRand"> Random start</label>
+      <label title="Each layer's pitch wanders slightly, like tape"><input type="checkbox" id="collDrift"> Drift</label>
+    </div>
     <div class="inset list short">
-      <table class="coll"><thead><tr><th>#</th><th>Sound</th><th>Volume</th><th>Pan</th><th>Pitch</th><th></th></tr></thead><tbody id="collRows"></tbody></table>
+      <table class="coll"><thead><tr><th>#</th><th>Sound</th><th>Volume</th><th>Pan</th><th title="Left darker, right brighter">Tone</th><th>Pitch</th><th></th></tr></thead><tbody id="collRows"></tbody></table>
     </div>
     <div class="status"><div id="collCount"></div><div id="collMsg"></div></div>
   </div>

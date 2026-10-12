@@ -20,7 +20,8 @@ then the next one starts. It's saved only in their browser; "Copy share link" ma
 ## Collage
 
 ⧉ next to any sound adds it as a layer in the Collage window (up to 4). Layers loop on their own clocks, each with
-volume, pan and pitch (±12 semitones). Record captures the next 30 s as it plays to a 24-bit WAV, turned down rather
+volume, pan, tone (one knob: low-pass left, high-pass right, filter out of the path at centre) and pitch (±12 semitones).
+Global: master volume, fade in/out time, random start points, and drift (a few cents of slow pitch wander). Record captures the next 30 s as it plays to a 24-bit WAV, turned down rather
 than clipped if the layers sum over full scale. Share links: `#/collage/<collection>~<item>~<vol>~<pan>~<semi>~<mute>,…`.
 
 ## Long pieces and samples

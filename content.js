@@ -31,7 +31,7 @@ HOW TO LISTEN
 · ↑ ↓ arrow keys move through the files, playing each one as you go. ← → move within a sound.
 · Space bar plays and pauses. ⏮ ⏭ step through the folder. Click the progress bar to move within a sound.
 · Press + beside a loop to add it to your Playlist. Choose how many times each one repeats, then Play all. "Copy share link" sends your arrangement to someone else.
-· Press ⧉ beside any sound to layer it in the Collage window. Up to four play at once, each looping on its own clock, so they drift in and out of phase. Set each layer's volume, pan and pitch; Record saves the next 30 seconds as a WAV.
+· Press ⧉ beside any sound to layer it in the Collage window. Up to four play at once, each looping on its own clock, so they drift in and out of phase. Set each layer's volume, pan, tone (darker or brighter) and pitch. Fade eases layers in and out, Random start begins each one somewhere new, and Drift lets the pitch wander like tape. Record saves the next 30 seconds as a WAV.
 · Open a .portal file, or the Night Water icon, to hear a collection in the dark. Esc brings you back.
 · Windows can be dragged around and closed. The taskbar brings them back.
 · Headphones or good speakers are best.

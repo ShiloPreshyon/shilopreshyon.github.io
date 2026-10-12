@@ -239,36 +239,54 @@ $('listShare').onclick = async () => {
 
 /* ---------------- collage ---------------- */
 // Up to four sounds layered at once. Each loops on its own clock, so layers drift in and out of phase.
-// Per layer: source -> gain -> pan -> collage bus -> output (and the analyser, for the picture).
+// Per layer: source -> [tone filter, only while Tone is off-centre] -> gain -> pan -> bus (master volume)
+//   -> fader (fade in/out) -> output, analyser and recorder.
 const MAX_LAYERS = 4;
-let CL = { layers: [] }; // layers: {u, c: collection id, i: item id, vol, pan, semi, mute}
-try { const v = JSON.parse(localStorage.getItem('collage')); if (v && Array.isArray(v.layers)) CL = v; } catch (e) {}
+const COLL_DEFAULTS = { master: .9, fade: 2, rand: true, drift: false };
+let CL = { layers: [], ...COLL_DEFAULTS }; // layers: {u, c: collection id, i: item id, vol, pan, semi, tone, mute}
+try { const v = JSON.parse(localStorage.getItem('collage')); if (v && Array.isArray(v.layers)) CL = { ...COLL_DEFAULTS, ...v }; } catch (e) {}
 CL.layers = CL.layers.filter(resolve).slice(0, MAX_LAYERS);
+CL.layers.forEach(L => { L.tone = L.tone || 0; });
 const saveCollage = () => { try { localStorage.setItem('collage', JSON.stringify(CL)); } catch (e) {} };
-const C = { playing: false, bus: null, nodes: new Map(), gen: 0 };
+const C = { playing: false, stopping: false, bus: null, out: null, nodes: new Map(), gen: 0, driftTimer: 0 };
 let collMsg = '';
 const layerBuf = L => { const r = resolve(L); return getBuf(r.coll.items[r.idx], r.coll); };
+const layerRate = L => Math.pow(2, L.semi / 12);
 
-function layerGraph(ac, out, L, buf, when) {
+// Tone, one knob: left rolls off highs (low-pass 20 kHz -> 400 Hz), right rolls off lows (high-pass 20 Hz -> 2 kHz).
+// At centre the filter is taken out of the path entirely.
+function applyTone(n, v, t) {
+  const on = v !== 0;
+  if (on !== n.filtered) { n.src.disconnect(); n.src.connect(on ? n.f : n.g); n.filtered = on; }
+  if (!on) return;
+  n.f.type = v < 0 ? 'lowpass' : 'highpass';
+  const hz = v < 0 ? 20000 * Math.pow(400 / 20000, -v) : 20 * Math.pow(2000 / 20, v);
+  if (t == null) n.f.frequency.value = hz; else n.f.frequency.setTargetAtTime(hz, t, .03);
+}
+function layerGraph(ac, out, L, buf, when, fadeIn = 0) {
+  const f = ac.createBiquadFilter(), g = ac.createGain(), p = ac.createStereoPanner();
+  f.Q.value = .707; f.connect(g); g.connect(p); p.connect(out); p.pan.value = L.pan;
+  const target = L.mute ? 0 : L.vol;
+  if (fadeIn > 0) { g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(target, when + fadeIn); }
+  else g.gain.value = target;
+  let n;
   if (buf.stream) { // long piece: its own looping <audio> element; pitch by varispeed, like the loops
     const el = buf.el;
     el.loop = true; el.preservesPitch = el.webkitPreservesPitch = el.mozPreservesPitch = false;
-    el.playbackRate = Math.pow(2, L.semi / 12);
-    const src = ac.createMediaElementSource(el);
-    const g = ac.createGain(); g.gain.value = L.mute ? 0 : L.vol;
-    const p = ac.createStereoPanner(); p.pan.value = L.pan;
-    src.connect(g); g.connect(p); p.connect(out);
+    el.playbackRate = layerRate(L);
+    if (CL.rand) el.currentTime = Math.random() * Math.max(0, buf.duration - 10);
+    n = { src: ac.createMediaElementSource(el), el, buf };
     setTimeout(() => el.play().catch(() => {}), Math.max(0, (when - ac.currentTime) * 1000));
-    return { src, g, p, el, buf };
+  } else {
+    const src = ac.createBufferSource();
+    src.buffer = buf; src.loop = true; src.playbackRate.value = layerRate(L);
+    src.start(when, CL.rand ? Math.random() * buf.duration : 0);
+    n = { src };
   }
-  const src = ac.createBufferSource();
-  src.buffer = buf; src.loop = true;
-  src.playbackRate.value = Math.pow(2, L.semi / 12);
-  const g = ac.createGain(); g.gain.value = L.mute ? 0 : L.vol;
-  const p = ac.createStereoPanner(); p.pan.value = L.pan;
-  src.connect(g); g.connect(p); p.connect(out);
-  src.start(when);
-  return { src, g, p };
+  Object.assign(n, { f, g, p, filtered: false, phase: Math.random() * 6.28 });
+  n.src.connect(g);
+  applyTone(n, L.tone);
+  return n;
 }
 async function collagePlay() {
   if (!CL.layers.length) return;
@@ -280,40 +298,79 @@ async function collagePlay() {
   let bufs;
   try { bufs = await Promise.all(CL.layers.map(layerBuf)); }
   catch (e) { if (g === C.gen) { collMsg = 'Could not load a sound'; renderCollage(); } return; }
-  if (g !== C.gen) return;
-  C.bus = ac.createGain(); C.bus.connect(ac.destination); C.bus.connect(P.an);
+  if (g !== C.gen) { bufs.forEach(dropStream); return; }
+  C.out = ac.createGain(); C.out.connect(ac.destination); C.out.connect(P.an);
+  C.bus = ac.createGain(); C.bus.gain.value = CL.master; C.bus.connect(C.out);
   const t0 = ac.currentTime + .05; // all layers start together
-  CL.layers.forEach((L, n) => C.nodes.set(L.u, layerGraph(ac, C.bus, L, bufs[n], t0)));
+  CL.layers.forEach((L, n) => C.nodes.set(L.u, layerGraph(ac, C.bus, L, bufs[n], t0, CL.fade)));
   C.playing = true; collMsg = '';
+  startDrift();
   if (moshPref) Cloud.mosh(3000);
   renderCollage();
 }
 function stopLayer(n) {
   if (n.el) { n.src.disconnect(); dropStream(n.buf); } else { try { n.src.stop(); } catch (e) {} }
 }
-function collageStop() {
+function collageStop() { // immediate; the Stop button fades out first (collageFadeOut)
   if (rec) finishRecording();
   C.gen++;
+  stopDrift();
   C.nodes.forEach(stopLayer);
   C.nodes.clear();
+  if (C.out) { C.out.disconnect(); C.out = null; }
   if (C.bus) { C.bus.disconnect(); C.bus = null; }
-  if (C.playing) { C.playing = false; renderCollage(); }
+  const was = C.playing; C.playing = C.stopping = false;
+  if (was) renderCollage();
+}
+function collageFadeOut() {
+  if (!C.playing || C.stopping) return;
+  if (!CL.fade) return collageStop();
+  C.stopping = true;
+  const t = P.ac.currentTime, g = C.gen;
+  C.out.gain.setValueAtTime(C.out.gain.value, t);
+  C.out.gain.linearRampToValueAtTime(0, t + CL.fade);
+  setTimeout(() => { if (g === C.gen) collageStop(); }, CL.fade * 1000 + 60);
+  renderCollage();
+}
+// Drift: each layer's pitch wanders a few cents on its own slow cycle, like tape. One cheap timer for all layers.
+function startDrift() {
+  if (!CL.drift || !C.playing || C.driftTimer) return;
+  C.driftTimer = setInterval(() => {
+    const t = P.ac.currentTime;
+    CL.layers.forEach(L => {
+      const n = C.nodes.get(L.u); if (!n) return;
+      const cents = 9 * Math.sin(t * .44 + n.phase) + 4 * Math.sin(t * 1.3 + n.phase * 2);
+      const r = layerRate(L) * Math.pow(2, cents / 1200);
+      if (n.el) n.el.playbackRate = r; else n.src.playbackRate.setTargetAtTime(r, t, .1);
+    });
+  }, 120);
+}
+function stopDrift() {
+  if (!C.driftTimer) return;
+  clearInterval(C.driftTimer); C.driftTimer = 0;
+  CL.layers.forEach(L => setLayer(L, 'semi', L.semi)); // back to exact pitch
 }
 async function addLayer(coll, idx) {
   openWin('w-coll');
   if (CL.layers.length >= MAX_LAYERS) { collMsg = `Full: remove a layer first (${MAX_LAYERS} max)`; renderCollage(); return; }
-  const L = { u: (uid++).toString(36), c: coll.id, i: coll.items[idx].id, vol: .8, pan: 0, semi: 0, mute: false };
+  const L = { u: (uid++).toString(36), c: coll.id, i: coll.items[idx].id, vol: .8, pan: 0, semi: 0, tone: 0, mute: false };
   CL.layers.push(L); saveCollage();
   collMsg = `Added ${coll.items[idx].title}`;
   renderCollage();
-  if (C.playing) { // join the running collage straight away
+  if (C.playing && !C.stopping) { // join the running collage, fading in
     const g = C.gen, buf = await layerBuf(L);
-    if (C.playing && g === C.gen && CL.layers.includes(L)) C.nodes.set(L.u, layerGraph(P.ac, C.bus, L, buf, P.ac.currentTime));
+    if (C.playing && g === C.gen && CL.layers.includes(L)) C.nodes.set(L.u, layerGraph(P.ac, C.bus, L, buf, P.ac.currentTime + .02, CL.fade));
+    else dropStream(buf);
   }
 }
 function removeLayer(u) {
   const n = C.nodes.get(u);
-  if (n) { stopLayer(n); C.nodes.delete(u); }
+  if (n) {
+    C.nodes.delete(u);
+    const d = Math.min(CL.fade, 1.5);
+    if (d > 0) { n.g.gain.setTargetAtTime(0, P.ac.currentTime, d / 4); setTimeout(() => stopLayer(n), d * 1000 + 60); }
+    else stopLayer(n);
+  }
   CL.layers = CL.layers.filter(L => L.u !== u); saveCollage(); collMsg = '';
   if (!CL.layers.length) collageStop();
   renderCollage();
@@ -324,10 +381,16 @@ function setLayer(L, k, v) {
   const t = P.ac.currentTime; // short glides, so moving a control never clicks
   if (k === 'vol' || k === 'mute') n.g.gain.setTargetAtTime(L.mute ? 0 : L.vol, t, .02);
   if (k === 'pan') n.p.pan.setTargetAtTime(L.pan, t, .02);
-  if (k === 'semi') {
-    if (n.el) n.el.playbackRate = Math.pow(2, L.semi / 12);
-    else n.src.playbackRate.setTargetAtTime(Math.pow(2, L.semi / 12), t, .02);
+  if (k === 'tone') applyTone(n, L.tone, t);
+  if (k === 'semi' && !C.driftTimer) {
+    if (n.el) n.el.playbackRate = layerRate(L);
+    else n.src.playbackRate.setTargetAtTime(layerRate(L), t, .02);
   }
+}
+function setCollage(k, v) {
+  CL[k] = v; saveCollage();
+  if (k === 'master' && C.bus) C.bus.gain.setTargetAtTime(v, P.ac.currentTime, .02);
+  if (k === 'drift') { if (v) startDrift(); else stopDrift(); }
 }
 // 24-bit WAV writer for recorded collages.
 function wav24(b) {
@@ -362,13 +425,13 @@ function startRecording(seconds = 30) {
     rec.n += e.inputBuffer.length;
     if (rec.n >= rec.total) finishRecording();
   };
-  C.bus.connect(sp); sp.connect(sink); sink.connect(ac.destination);
+  C.out.connect(sp); sp.connect(sink); sink.connect(ac.destination);
   renderCollage();
 }
 function finishRecording() {
   const r = rec; rec = null;
   r.sp.onaudioprocess = null;
-  try { C.bus && C.bus.disconnect(r.sp); } catch (e) {}
+  try { C.out && C.out.disconnect(r.sp); } catch (e) {}
   r.sp.disconnect(); r.sink.disconnect();
   const len = Math.min(r.n, r.total);
   if (len < r.sr / 2) { collMsg = 'Recording too short'; return renderCollage(); }
@@ -387,44 +450,56 @@ function finishRecording() {
 }
 function renderCollage() {
   const rows = $('collRows'); rows.innerHTML = '';
+  const semis = Array.from({ length: 25 }, (_, k) => k - 12).map(s => `<option value="${s}">${s > 0 ? '+' : ''}${s}</option>`).join('');
   CL.layers.forEach((L, n) => {
     const r = resolve(L), it = r.coll.items[r.idx];
     const tr = document.createElement('tr');
-    const semis = Array.from({ length: 25 }, (_, k) => k - 12).map(s => `<option value="${s}">${s > 0 ? '+' : ''}${s}</option>`).join('');
     tr.innerHTML = `<td class="num">${n + 1}</td><td class="name">${ICO.wav}<span></span></td>` +
       `<td><input type="range" min="0" max="1" step="0.01" aria-label="Volume"></td>` +
-      `<td><input type="range" min="-1" max="1" step="0.05" aria-label="Pan"></td>` +
+      `<td><input type="range" min="-1" max="1" step="0.05" aria-label="Pan" title="Double-click to centre"></td>` +
+      `<td><input type="range" min="-1" max="1" step="0.02" aria-label="Tone" title="Left darker, right brighter. Double-click to reset"></td>` +
       `<td><select aria-label="Pitch in semitones">${semis}</select></td>` +
       `<td class="ctl"><button class="mini" title="Mute">M</button><button class="mini" title="Remove">✕</button></td>`;
     tr.querySelector('span').textContent = it.title;
-    const [vol, pan] = tr.querySelectorAll('input'), semi = tr.querySelector('select'), [mute, rm] = tr.querySelectorAll('button');
-    vol.value = L.vol; pan.value = L.pan; semi.value = String(L.semi);
+    const [vol, pan, tone] = tr.querySelectorAll('input'), semi = tr.querySelector('select'), [mute, rm] = tr.querySelectorAll('button');
+    vol.value = L.vol; pan.value = L.pan; tone.value = L.tone; semi.value = String(L.semi);
     vol.oninput = () => setLayer(L, 'vol', +vol.value);
     pan.oninput = () => setLayer(L, 'pan', +pan.value);
     pan.ondblclick = () => { pan.value = 0; setLayer(L, 'pan', 0); };
+    // tone snaps to centre (filter out of the path) when close
+    tone.oninput = () => { let v = +tone.value; if (Math.abs(v) < .08) v = 0; setLayer(L, 'tone', v); };
+    tone.ondblclick = () => { tone.value = 0; setLayer(L, 'tone', 0); };
     semi.onchange = () => setLayer(L, 'semi', +semi.value);
     mute.classList.toggle('on', L.mute);
     mute.onclick = () => { setLayer(L, 'mute', !L.mute); mute.classList.toggle('on', L.mute); };
     rm.onclick = () => removeLayer(L.u);
     rows.appendChild(tr);
   });
-  if (!CL.layers.length) rows.innerHTML = `<tr><td colspan="6" class="empty">Empty. Press ⧉ next to any sound in the Work window to layer it here. Up to ${MAX_LAYERS} play at once, each looping on its own clock.</td></tr>`;
+  if (!CL.layers.length) rows.innerHTML = `<tr><td colspan="7" class="empty">Empty. Press ⧉ next to any sound in the Work window to layer it here. Up to ${MAX_LAYERS} play at once, each looping on its own clock.</td></tr>`;
   $('collCount').textContent = `${CL.layers.length} of ${MAX_LAYERS} layers`;
   $('collMsg').textContent = rec ? `Recording… ${Math.floor(rec.n / rec.sr)} / ${Math.round(rec.total / rec.sr)} s`
-    : collMsg || (C.playing ? 'Playing: layers drift in and out of phase' : '');
-  $('collPlay').disabled = !CL.layers.length || C.playing;
-  $('collStop').disabled = !C.playing;
+    : C.stopping ? 'Fading out…' : collMsg || (C.playing ? 'Playing: layers drift in and out of phase' : '');
+  $('collPlay').disabled = !CL.layers.length || (C.playing && !C.stopping);
+  $('collStop').disabled = !C.playing || C.stopping;
   $('collShare').disabled = $('collClear').disabled = !CL.layers.length;
-  $('collRec').disabled = !C.playing || !!rec;
+  $('collRec').disabled = !C.playing || C.stopping || !!rec;
   $('collRec').textContent = rec ? '⏺ Recording…' : '⏺ Record 30 s';
+  $('collMaster').value = CL.master; $('collFade').value = String(CL.fade);
+  $('collRand').checked = CL.rand; $('collDrift').checked = CL.drift;
   ui();
 }
 $('collPlay').onclick = collagePlay;
-$('collStop').onclick = collageStop;
+$('collStop').onclick = collageFadeOut;
 $('collRec').onclick = () => startRecording(30);
 $('collClear').onclick = () => { collageStop(); CL.layers = []; saveCollage(); collMsg = ''; renderCollage(); };
+$('collMaster').oninput = e => setCollage('master', +e.target.value);
+$('collFade').onchange = e => setCollage('fade', +e.target.value);
+$('collRand').onchange = e => setCollage('rand', e.target.checked);
+$('collDrift').onchange = e => setCollage('drift', e.target.checked);
 $('collShare').onclick = async () => {
-  const url = `${location.origin}${location.pathname}#/collage/` + CL.layers.map(L => [L.c, L.i, L.vol, L.pan, L.semi, L.mute ? 1 : 0].join('~')).join(',');
+  const url = `${location.origin}${location.pathname}#/collage/` +
+    CL.layers.map(L => [L.c, L.i, L.vol, L.pan, L.semi, L.mute ? 1 : 0, L.tone].join('~')).join(',') +
+    `/${[CL.master, CL.fade, CL.rand ? 1 : 0, CL.drift ? 1 : 0].join('~')}`;
   try { await navigator.clipboard.writeText(url); collMsg = 'Link copied'; } catch (e) { prompt('Copy this link:', url); collMsg = ''; }
   renderCollage();
 };
@@ -458,7 +533,7 @@ function placeWindows() {
   set('w-doc', 140, 14, Math.min(720, W - 160));
   const lw = Math.min(440, W - 140);
   set('w-list', Math.max(112, W - lw - 24), 28, lw);
-  set('w-coll', 140, 60, Math.min(620, W - 160));
+  set('w-coll', 140, 60, Math.min(700, W - 160));
   set('w-lic', 220, 120, Math.min(420, W - 240));
 }
 document.querySelectorAll('.win').forEach(w => {
@@ -558,7 +633,7 @@ $('dirUp').onclick = () => openDir(null);
 /* ---------------- desktop, start menu ---------------- */
 const latest = S.collections[0];
 const launch = {
-  work: () => openDir(dirPath ?? latest.id),
+  work: () => openDir(null), // the Work icon always shows every folder
   about: () => { openWin('w-about'); setHash('#/readme'); },
   contact: () => { openWin('w-mail'); setHash('#/contact'); },
   portal: () => openPortal(P.coll || latest),
@@ -691,13 +766,20 @@ function route() {
   else if (p[0] === 'contact') launch.contact();
   else if (S.docs[p[0]]) openDoc(p[0]);
   else if (p[0] === 'collage') {
+    const num = (v, lo, hi, d) => v !== undefined && v !== '' && Number.isFinite(+v) ? Math.max(lo, Math.min(hi, +v)) : d;
     if (p[1]) {
       const layers = p[1].split(',').map(x => {
-        const [c, i, vol, pan, semi, mute] = decodeURIComponent(x).split('~');
-        const n = (v, lo, hi, d) => Number.isFinite(+v) ? Math.max(lo, Math.min(hi, +v)) : d;
-        return { u: (uid++).toString(36), c, i, vol: n(vol, 0, 1, .8), pan: n(pan, -1, 1, 0), semi: Math.round(n(semi, -12, 12, 0)), mute: mute === '1' };
+        const [c, i, vol, pan, semi, mute, tone] = decodeURIComponent(x).split('~');
+        return { u: (uid++).toString(36), c, i, vol: num(vol, 0, 1, .8), pan: num(pan, -1, 1, 0), semi: Math.round(num(semi, -12, 12, 0)),
+          mute: mute === '1', tone: num(tone, -1, 1, 0) };
       }).filter(resolve).slice(0, MAX_LAYERS);
-      if (layers.length) { collageStop(); CL = { layers }; saveCollage(); collMsg = 'Shared collage loaded: press Play'; }
+      const [master, fade, rand, drift] = (p[2] || '').split('~');
+      if (layers.length) {
+        collageStop();
+        CL = { layers, master: num(master, 0, 1, COLL_DEFAULTS.master), fade: num(fade, 0, 10, COLL_DEFAULTS.fade),
+          rand: rand === undefined ? COLL_DEFAULTS.rand : rand === '1', drift: drift === '1' };
+        saveCollage(); collMsg = 'Shared collage loaded: press Play';
+      }
     }
     launch.collage();
   }
@@ -746,7 +828,7 @@ openWin('w-play');
 let seen = true;
 try { seen = !!localStorage.getItem('seen'); localStorage.setItem('seen', '1'); } catch (e) {}
 if (location.hash.length > 2) route();
-else { if (!seen) openWin('w-about'); openDir(latest.id); }
+else { if (!seen) openWin('w-about'); openDir(null); }
 addEventListener('hashchange', route);
 renderList(); renderCollage(); ui(); tick(); setInterval(tick, 10000);
 requestAnimationFrame(frame);
