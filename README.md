@@ -24,31 +24,24 @@ volume, pan, tone (one knob: low-pass left, high-pass right, filter out of the p
 Global: master volume, fade in/out time, random start points, and drift (a few cents of slow pitch wander). Record captures the next 30 s as it plays to a 24-bit WAV, turned down rather
 than clipped if the layers sum over full scale. Share links: `#/collage/<collection>~<item>~<vol>~<pan>~<semi>~<mute>,…`.
 
-## Long pieces and samples
+## Adding work: `node tools/sync.mjs`
 
-Items with `stream: true` play through an `<audio>` element as they download instead of being decoded whole,
-so long pieces start at once and don't fill memory. Midi Art uses these: 256k AAC listening copies made with
-`afconvert -f m4af -d aac@48000 -b 256000 -q 127 --src-complexity bats -r 127 in.wav out.m4a`.
-A collection's `license` text appears as License.txt at the top of its folder.
+Shilo's folder (`/Users/jonathanscherk/Documents/Shilo Website Files`) is the master copy, and the site mirrors it.
+Each top-level folder listed in `library.json` is a desktop icon, and its subfolders are folders on the site. Add, rename
+or replace audio there, then run `node tools/sync.mjs` and commit the new `library.js`. The tool:
 
-## Level match
+- makes listening copies: 48 kHz FLAC for loop folders (gapless), 256k AAC for everything else (MP3s used as they are)
+- makes download copies for sections with `"downloads": true`: FLAC at the file's own rate, 24-bit. Float WAVs
+  go through `tools/prep.swift`, which turns a file down only if it would clip (plain gain, never limiting)
+- measures loudness (`tools/measure.swift`, ITU-R BS.1770; `--selftest` checks it) and sets Level match gains:
+  each folder as a whole (studio folders track by track) to -16 LUFS, raised only while true peak stays at or under -1 dBTP
+- uploads to Bunny (`listening-water.b-cdn.net`) under versioned names, so stale copies are never served, and
+  removes superseded versions. The storage key is read from `~/.config/listening-water/bunny-storage-key` (never
+  commit it)
+- only reads Shilo's files, and keeps its work in `~/.cache/listening-water`, so re-runs only redo what changed
 
-`levels.js` holds a playback gain per sound, made by measuring every file to ITU-R BS.1770 (the streaming standard):
-
-```
-swiftc -O tools/measure.swift -o /tmp/measure && /tmp/measure --selftest
-node tools/levels.mjs /tmp/measure
-```
-
-Folders are matched as a whole (Studio tracks one by one) to -16 LUFS, turning down freely but turning up only while
-the loudest true peak stays at or under -1 dBTP, so it never needs a limiter. A sound at 0 dB, or everything when
-the visitor unticks Level match, skips the gain stage entirely. Re-run after adding or changing audio.
-
-## Adding a collection
-
-1. `tools/encode.sh audio/<collection-id> /path/to/*.wav` — lossless FLAC, same bit depth and rate.
-2. Add an entry to `collections` in `content.js` (ids match the FLAC file names it printed).
-3. Re-run the level measurement (see Level match).
+Titles, subtitles, notes, loop folders, credits (artist / role / year) and old ids kept as aliases go in
+`library.json` under `folders`.
 
 ## Addresses
 

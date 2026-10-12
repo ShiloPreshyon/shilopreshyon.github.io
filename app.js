@@ -2,7 +2,14 @@ const S = window.SITE;
 const $ = id => document.getElementById(id);
 const fmt = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
 const narrow = () => innerWidth <= 720;
-const findColl = id => S.collections.find(c => c.id === id);
+// The audio library comes from library.js, made from Shilo's folder by tools/sync.mjs. Sections are the desktop
+// folders; collections are the folders inside them. Old ids live on as aliases so earlier links keep working.
+const LIB = window.LIBRARY;
+S.sections = LIB.sections;
+S.collections = LIB.sections.flatMap(s => s.collections);
+const findColl = id => S.collections.find(c => c.id === id || (c.aliases || []).includes(id));
+const findSection = id => S.sections.find(s => s.id === id);
+const itemIndex = (c, id) => c.items.findIndex(x => x.id === id || (x.aliases || []).includes(id));
 let moshPref = true;
 try { moshPref = localStorage.getItem('mosh') !== '0'; } catch (e) {}
 
@@ -39,10 +46,7 @@ function ctx() {
 // change, or everything when the box is unticked, skip the gain stage and play exactly as the file is.
 let levelOn = true;
 try { levelOn = localStorage.getItem('level') !== '0'; } catch (e) {}
-function levelDb(coll, item) {
-  const v = levelOn && window.LEVELS && LEVELS[`${coll.id}/${item.id}`];
-  return v ? v.gain : 0;
-}
+function levelDb(coll, item) { return levelOn && item.gain ? item.gain : 0; }
 const dbToLin = db => Math.pow(10, db / 20);
 function connectOut(node) {
   node.disconnect();
@@ -58,17 +62,19 @@ function setLevelMatch(on) {
   CL.layers.forEach(L => setLayer(L, 'vol', L.vol)); // collage layers carry their level in their own gain
   ui();
 }
-const audioUrl = (coll, item) => `audio/${coll.id}/${item.id}.${item.ext || 'flac'}`;
+const audioUrl = (coll, item) => `${LIB.cdn}/${item.file}`;
+const downloadUrl = item => item.dl && `${LIB.cdn}/${item.dl.path}`;
 function getBuf(item, coll) {
   if (item.stream) return openStream(coll, item);
-  if (!P.cache.has(item.id)) {
+  const key = `${coll.id}/${item.id}`;
+  if (!P.cache.has(key)) {
     const p = fetch(audioUrl(coll, item))
       .then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
       .then(a => ctx().decodeAudioData(a));
-    p.catch(() => P.cache.delete(item.id));
-    P.cache.set(item.id, p);
+    p.catch(() => P.cache.delete(key));
+    P.cache.set(key, p);
   }
-  return P.cache.get(item.id);
+  return P.cache.get(key);
 }
 // Long pieces stream through an <audio> element instead of being decoded whole (a 28-minute piece would need
 // ~650 MB of memory). It feeds the same output and analyser. Each call makes a fresh element.
@@ -192,7 +198,7 @@ try { const v = JSON.parse(localStorage.getItem('playlist')); if (v && Array.isA
 let uid = Date.now();
 const saveList = () => { try { localStorage.setItem('playlist', JSON.stringify(PL)); } catch (e) {} };
 function resolve(e) {
-  const coll = e && findColl(e.c), idx = coll ? coll.items.findIndex(x => x.id === e.i) : -1;
+  const coll = e && findColl(e.c), idx = coll ? itemIndex(coll, e.i) : -1;
   return idx >= 0 ? { coll, idx } : null;
 }
 PL.entries = PL.entries.filter(resolve);
@@ -554,20 +560,21 @@ function openWin(id) {
 function placeWindows() {
   if (narrow()) return;
   const W = innerWidth, H = innerHeight;
+  const L = $('icons').offsetWidth + 24; // windows start just right of the desktop icons (one or two columns)
   const set = (id, l, t, w) => Object.assign($(id).style, { left: l + 'px', top: t + 'px', width: w + 'px' });
-  const dw = Math.min(580, W - 140);
-  set('w-dir', 112, 28, dw);
-  const pw = Math.min(460, W - 140);
-  set('w-play', 160, Math.max(140, Math.min(400, H - 30 - 310)), pw); // under the Work folder, clear of the Readme
-  const rw = Math.min(460, W - 140);
-  set('w-about', Math.max(150, W - rw - 24), 28, rw);
-  set('w-mail', 190, 130, 320);
-  set('w-doc', 140, 14, Math.min(720, W - 160));
-  const lw = Math.min(440, W - 140);
-  set('w-list', Math.max(112, W - lw - 24), 28, lw);
-  set('w-coll', 140, 60, Math.min(700, W - 160));
-  set('w-lic', 220, 120, Math.min(420, W - 240));
-  set('w-ethos', Math.max(150, W - rw - 60), 60, rw);
+  const dw = Math.min(600, W - L - 24);
+  set('w-dir', L, 28, dw);
+  const pw = Math.min(460, W - L - 24);
+  set('w-play', L + 48, Math.max(140, Math.min(400, H - 30 - 310)), pw); // under the folder window, clear of the Readme
+  const rw = Math.min(460, W - L - 24);
+  set('w-about', Math.max(L + 40, W - rw - 24), 28, rw);
+  set('w-mail', L + 80, 130, 320);
+  set('w-doc', L + 30, 14, Math.min(720, W - L - 48));
+  const lw = Math.min(440, W - L - 24);
+  set('w-list', Math.max(L, W - lw - 24), 28, lw);
+  set('w-coll', L + 30, 60, Math.min(700, W - L - 48));
+  set('w-lic', L + 110, 120, Math.min(420, W - L - 130));
+  set('w-ethos', Math.max(L + 40, W - rw - 60), 60, rw);
 }
 document.querySelectorAll('.win').forEach(w => {
   w.addEventListener('pointerdown', () => focusWin(w));
@@ -599,14 +606,20 @@ function renderTasks() {
 }
 
 /* ---------------- explorer ---------------- */
-let dirPath = null; // null = Work root, else a collection id
+// dirPath: null = the top (every section), 'sec:<id>' = a section's folders, otherwise a collection id
+let dirPath = null;
 function openDir(id) {
-  dirPath = id && findColl(id) ? id : null;
+  if (id && id.startsWith('sec:')) dirPath = findSection(id.slice(4)) ? id : null;
+  else { const c = id && findColl(id); dirPath = c ? c.id : null; }
   openWin('w-dir');
   renderDir();
-  if (!P.coll || !dirPath || P.coll.id !== dirPath) setHash(dirPath ? `#/work/${dirPath}` : '#/work');
+  const c = dirPath && !dirPath.startsWith('sec:') && dirPath;
+  if (!P.coll || !c || P.coll.id !== c) setHash(!dirPath ? '#/work' : c ? `#/work/${c}` : `#/folder/${dirPath.slice(4)}`);
 }
-function row(icon, cells, onClick, sel, onAdd, onLayer) {
+const totalLen = items => items.reduce((a, it) => a + it.len, 0);
+const longFmt = s => s >= 3600 ? `${Math.floor(s / 3600)} h ${Math.round(s % 3600 / 60)} min` : s >= 60 ? `${Math.round(s / 60)} min` : fmt(s);
+const mb = b => b >= 1e9 ? `${(b / 1e9).toFixed(1)} GB` : `${Math.round(b / 1e6)} MB`;
+function row(icon, cells, onClick, sel, onAdd, onLayer, dl) {
   const tr = document.createElement('tr');
   tr.innerHTML = `<td class="name">${ICO[icon]}<span></span></td>` + cells.slice(1).map(() => '<td></td>').join('');
   tr.querySelector('span').textContent = cells[0];
@@ -627,46 +640,73 @@ function row(icon, cells, onClick, sel, onAdd, onLayer) {
     b.onclick = e => { e.stopPropagation(); onLayer(); };
     add.appendChild(b);
   }
+  if (dl) { // the lossless original-rate copy
+    const a = document.createElement('a');
+    a.className = 'mini'; a.textContent = '⤓'; a.href = dl.url; a.download = dl.name; a.title = dl.title;
+    a.onclick = e => e.stopPropagation();
+    add.appendChild(a);
+  }
   tr.appendChild(add);
   return tr;
 }
 function renderDir() {
   const rows = $('dirRows'); rows.innerHTML = '';
-  const c = dirPath && findColl(dirPath);
-  $('dirUp').disabled = !c;
-  if (!c) {
-    $('dirTitle').textContent = 'The Beautiful Research Directory — Work';
-    $('dirAddr').textContent = 'C:\\Work';
-    $('dirHead').innerHTML = '<th>Name</th><th>Items</th><th>Year</th><th>Type</th><th></th>';
-    S.collections.forEach(k => rows.appendChild(row('folder', [`${k.title} — ${k.sub}`, k.items.length, k.year, 'File folder'], () => openDir(k.id))));
-    $('dirCount').textContent = `${S.collections.length} object(s)`;
+  const sec = dirPath && dirPath.startsWith('sec:') ? findSection(dirPath.slice(4)) : null;
+  const c = !sec && dirPath && findColl(dirPath);
+  $('dirUp').disabled = !dirPath;
+  const folderHead = '<th>Name</th><th>Items</th><th>Length</th><th>Type</th><th></th>';
+  if (!sec && !c) { // the top: every section
+    $('dirTitle').textContent = 'The Beautiful Research Directory';
+    $('dirAddr').textContent = 'C:\\';
+    $('dirHead').innerHTML = folderHead;
+    S.sections.forEach(s => rows.appendChild(row('folder', [s.title, `${s.collections.length} folder${s.collections.length > 1 ? 's' : ''}`,
+      longFmt(totalLen(s.collections.flatMap(k => k.items))), 'File folder'], () => openDir('sec:' + s.id))));
+    $('dirCount').textContent = `${S.sections.length} object(s)`;
     $('dirNote').textContent = S.name;
     return;
   }
-  $('dirTitle').textContent = `${c.title} — ${c.sub}`;
-  $('dirAddr').textContent = `C:\\Work\\${c.title} — ${c.sub}`;
-  const studio = c.kind === 'studio', samples = c.kind === 'samples';
-  const addTh = '<th title="+ add to playlist · ⧉ add to collage">+ ⧉</th>';
+  if (sec) { // a section: its folders
+    $('dirTitle').textContent = sec.title;
+    $('dirAddr').textContent = `C:\\${sec.title}`;
+    $('dirHead').innerHTML = folderHead;
+    sec.collections.forEach(k => rows.appendChild(row('folder', [k.sub ? `${k.title} — ${k.sub}` : k.title, k.items.length,
+      longFmt(totalLen(k.items)), 'File folder'], () => openDir(k.id))));
+    $('dirCount').textContent = `${sec.collections.length} object(s)`;
+    $('dirNote').textContent = sec.downloads ? 'Free to download and use. See License.txt inside each folder.' : S.name;
+    return;
+  }
+  const section = findSection(c.section);
+  $('dirTitle').textContent = c.sub ? `${c.title} — ${c.sub}` : c.title;
+  $('dirAddr').textContent = `C:\\${section.title}\\${c.title}`;
+  const studio = c.kind === 'studio', samples = !!section.downloads;
+  const addTh = `<th title="+ add to playlist · ⧉ add to collage${samples ? ' · ⤓ download' : ''}">+ ⧉${samples ? ' ⤓' : ''}</th>`;
+  const kindOf = it => it.ext === 'flac' ? 'FLAC audio' : it.ext === 'mp3' ? 'MP3 audio' : 'AAC audio';
   $('dirHead').innerHTML = studio ? `<th>Name</th><th>Artist</th><th>Role</th><th>Year</th><th>Length</th>${addTh}`
-    : samples ? `<th>Name</th><th>Length</th><th>Type</th>${addTh}`
-    : `<th>Name</th><th>Date</th><th>Length</th><th>Type</th>${addTh}`;
-  if (c.license) rows.appendChild(row('doc', ['License.txt', '', ...(samples ? ['Text'] : ['', 'Text'])], () => openLicense(c)));
-  c.items.forEach((it, i) => rows.appendChild(row('wav', studio ? [it.title, it.artist, it.role, it.year, fmt(it.len)]
-    : samples ? [it.title, fmt(it.len), 'AAC audio'] : [it.title, it.date, fmt(it.len), 'FLAC audio'], () => {
-    openWin('w-play'); select(c, i);
-  }, P.coll === c && P.idx === i, () => addToList(c, i), () => addLayer(c, i))));
-  // file rows are the ones with add buttons; tag them with their item index (License.txt sits above them)
-  [...rows.querySelectorAll('tr')].filter(r => r.querySelector('td.add button')).forEach((r, i) => r.dataset.i = i);
-  rows.appendChild(row('moon', [`${c.title} — Night Water`, ...(studio ? ['', '', '', ''] : samples ? ['', 'Portal'] : ['', '', 'Portal'])], () => openPortal(c)));
-  $('dirCount').textContent = `${c.items.length + 1} object(s)`;
-  $('dirNote').textContent = c.note;
+    : samples ? `<th>Name</th><th>Length</th><th>Download</th>${addTh}`
+    : `<th>Name</th><th>Length</th><th>Type</th>${addTh}`;
+  const cols = studio ? 5 : 3;
+  if (c.license) rows.appendChild(row('doc', ['License.txt', ...Array(cols - 2).fill(''), 'Text'], () => openLicense(c)));
+  c.items.forEach((it, i) => {
+    const cells = studio ? [it.title, it.artist || '', it.role || '', it.year || '', fmt(it.len)]
+      : samples ? [it.title, fmt(it.len), it.dl ? `FLAC ${it.dl.rate / 1000} kHz · ${mb(it.dl.size)}` : '—']
+      : [it.title, fmt(it.len), kindOf(it)];
+    const dl = it.dl && { url: downloadUrl(it), name: it.dl.name, title: `Download ${it.dl.name} (lossless, ${it.dl.rate / 1000} kHz, ${mb(it.dl.size)})` };
+    const tr = row('wav', cells, () => { openWin('w-play'); select(c, i); }, P.coll === c && P.idx === i, () => addToList(c, i), () => addLayer(c, i), dl);
+    tr.dataset.i = i;
+    rows.appendChild(tr);
+  });
+  rows.appendChild(row('moon', [`${c.title} — Night Water`, ...Array(cols - 2).fill(''), 'Portal'], () => openPortal(c)));
+  $('dirCount').textContent = `${c.items.length + (c.license ? 2 : 1)} object(s)`;
+  $('dirNote').textContent = c.note || (samples ? 'Free to download and use. See License.txt.' : S.name);
 }
-$('dirUp').onclick = () => openDir(null);
+$('dirUp').onclick = () => {
+  if (dirPath && !dirPath.startsWith('sec:')) openDir('sec:' + findColl(dirPath).section); else openDir(null);
+};
 
 /* ---------------- desktop, start menu ---------------- */
 const latest = S.collections[0];
 const launch = {
-  work: () => openDir(null), // the Work icon always shows every folder
+  work: () => openDir(null),
   about: () => { openWin('w-about'); setHash('#/readme'); },
   ethos: () => { openWin('w-ethos'); setHash('#/ethos'); },
   contact: () => { openWin('w-mail'); setHash('#/contact'); },
@@ -676,7 +716,8 @@ const launch = {
   cv: () => openDoc('cv'),
   bio: () => openDoc('bio'),
 };
-const icons = [['Work', 'cd', 'work'], ['Readme.txt', 'doc', 'about'], ['Ethos.txt', 'doc', 'ethos'], ['CV.pdf', 'pdf', 'cv'], ['Bio.pdf', 'pdf', 'bio'],
+S.sections.forEach(s => launch['sec:' + s.id] = () => openDir('sec:' + s.id));
+const icons = [...S.sections.map(s => [s.title, s.icon, 'sec:' + s.id]), ['Readme.txt', 'doc', 'about'], ['Ethos.txt', 'doc', 'ethos'], ['CV.pdf', 'pdf', 'cv'], ['Bio.pdf', 'pdf', 'bio'],
   ['Playlist', 'list', 'playlist'], ['Collage', 'layers', 'collage'],
   ['Contact', 'mail', 'contact'], ['Night Water', 'moon', 'portal']];
 icons.forEach(([n, ic, k]) => {
@@ -700,7 +741,7 @@ document.querySelector('[data-ico=mail]').innerHTML = ICO.mail;
 
 function openLicense(c) {
   $('licTitle').textContent = `License.txt — ${c.title}`;
-  $('licTxt').textContent = c.license.replace('{email}', S.email);
+  $('licTxt').textContent = S.licenses[c.license].replace('{email}', S.email);
   openWin('w-lic');
 }
 
@@ -766,7 +807,7 @@ function openPortal(c) {
   setHash(`#/portal/${c.id}`);
   ui();
 }
-function closePortal() { $('portal').classList.add('hide'); portalColl = null; setHash(dirPath ? `#/work/${dirPath}` : '#/'); }
+function closePortal() { $('portal').classList.add('hide'); portalColl = null; setHash(dirPath && !dirPath.startsWith('sec:') ? `#/work/${dirPath}` : '#/'); }
 $('pClose').onclick = closePortal;
 addEventListener('keydown', e => {
   if (e.key === 'Escape' && portalColl) closePortal();
@@ -784,7 +825,7 @@ addEventListener('keydown', e => {
 });
 function surf(d) {
   if (P.lpos !== null) { const n = P.lpos + d; if (n >= 0 && n < PL.entries.length) listPlay(n); return; }
-  const c = P.coll || (dirPath && findColl(dirPath)) || latest;
+  const c = P.coll || (dirPath && !dirPath.startsWith('sec:') && findColl(dirPath)) || latest;
   const n = P.coll ? P.idx + d : (d > 0 ? 0 : c.items.length - 1);
   if (n < 0 || n >= c.items.length) return;
   if (!portalColl) openWin('w-play');
@@ -831,9 +872,10 @@ function route() {
     launch.playlist();
   }
   else if (p[0] === 'portal' && findColl(p[1])) openPortal(findColl(p[1]));
+  else if (p[0] === 'folder' && findSection(p[1])) openDir('sec:' + p[1]);
   else if (p[0] === 'work') {
     openDir(p[1] || null);
-    const c = findColl(p[1]), i = c ? c.items.findIndex(x => x.id === p[2]) : -1;
+    const c = findColl(p[1]), i = c ? itemIndex(c, p[2]) : -1;
     if (i >= 0) { openWin('w-play'); select(c, i, false); } // browsers block sound until a click
   }
   routing = false;

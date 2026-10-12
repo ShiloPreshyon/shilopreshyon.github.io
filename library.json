@@ -1,0 +1,43 @@
+{
+  "_about": "How Shilo's folder becomes the site. tools/sync.mjs reads this. Folder paths are relative to source.",
+  "source": "/Users/jonathanscherk/Documents/Shilo Website Files",
+  "cdn": "https://listening-water.b-cdn.net",
+  "storage": {
+    "host": "storage.bunnycdn.com",
+    "zone": "listening-water-audio",
+    "keyFile": "~/.config/listening-water/bunny-storage-key"
+  },
+  "sections": [
+    { "folder": "Personal Works", "id": "personal-works", "icon": "cd" },
+    { "folder": "Collage Materials", "id": "collage-materials", "icon": "layers", "downloads": true, "license": "samples" },
+    { "folder": "Collaborations", "id": "collaborations", "icon": "folder" },
+    { "folder": "Production Work", "id": "production-work", "icon": "folder", "kind": "studio" }
+  ],
+  "folders": {
+    "Personal Works/Small Loops": {
+      "id": "small-loops-2026",
+      "sub": "LĒNA Residency · JOYA: AiR, 2026",
+      "note": "Small loops from LĒNA Residency (Galiano Island, June 10–12) and JOYA: AiR (Andalucía, June 19), 2026.",
+      "loop": true,
+      "listen": "flac",
+      "order": 0
+    },
+    "Collage Materials/Synths Midi Cntrl": {
+      "id": "midi-art",
+      "title": "Midi Art",
+      "sub": "Synths, MIDI control",
+      "order": 0
+    },
+    "Collaborations/Cartoon Lizard": {
+      "id": "cartoon-lizard",
+      "aliases": ["studio"],
+      "kind": "studio",
+      "items": {
+        "Neighbouring Hotels": {
+          "artist": "Cartoon Lizard", "release": "Sentinels EP", "role": "Producer, Audio Engineer", "year": 2019,
+          "aliases": ["cartoon-lizard-neighbouring-hotels"]
+        }
+      }
+    }
+  }
+}
