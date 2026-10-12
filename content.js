@@ -56,7 +56,7 @@ HOW TO LISTEN
 
 ABOUT THE SOUND
 
-Loops are lossless 24-bit / 48 kHz FLAC. Longer pieces are high-quality 256k AAC so they can start playing straight away. Everything plays straight from the file with nothing added along the way: no streaming service, no processing.
+Loops are lossless 24-bit / 48 kHz FLAC. Longer pieces are high-quality 256k AAC so they can start playing straight away. Everything plays straight from the file with nothing added along the way: no streaming service, no processing. The one exception is Level match in Now Playing, a plain volume change that keeps pieces at a similar loudness; untick it to hear every file exactly as it is.
 
 The picture in Now Playing is the sound itself. Each row of points is a moment of its spectrum, low frequencies on the left, drifting away from you as it plays. Untick Datamosh if you'd like it to stay still between files.
 

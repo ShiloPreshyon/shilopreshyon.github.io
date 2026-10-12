@@ -31,10 +31,24 @@ so long pieces start at once and don't fill memory. Midi Art uses these: 256k AA
 `afconvert -f m4af -d aac@48000 -b 256000 -q 127 --src-complexity bats -r 127 in.wav out.m4a`.
 A collection's `license` text appears as License.txt at the top of its folder.
 
+## Level match
+
+`levels.js` holds a playback gain per sound, made by measuring every file to ITU-R BS.1770 (the streaming standard):
+
+```
+swiftc -O tools/measure.swift -o /tmp/measure && /tmp/measure --selftest
+node tools/levels.mjs /tmp/measure
+```
+
+Folders are matched as a whole (Studio tracks one by one) to -16 LUFS, turning down freely but turning up only while
+the loudest true peak stays at or under -1 dBTP, so it never needs a limiter. A sound at 0 dB, or everything when
+the visitor unticks Level match, skips the gain stage entirely. Re-run after adding or changing audio.
+
 ## Adding a collection
 
 1. `tools/encode.sh audio/<collection-id> /path/to/*.wav` — lossless FLAC, same bit depth and rate.
 2. Add an entry to `collections` in `content.js` (ids match the FLAC file names it printed).
+3. Re-run the level measurement (see Level match).
 
 ## Addresses
 

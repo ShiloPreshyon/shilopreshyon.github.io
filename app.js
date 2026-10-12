@@ -31,8 +31,32 @@ function ctx() {
     try { P.ac = new AudioContext({ sampleRate: 48000 }); } catch (e) { P.ac = new AudioContext(); }
     P.an = P.ac.createAnalyser();
     P.an.fftSize = 2048; P.an.smoothingTimeConstant = .55; P.an.minDecibels = -95; P.an.maxDecibels = -15;
+    P.lg = P.ac.createGain(); P.lg.connect(P.ac.destination); P.lg.connect(P.an);
   }
   return P.ac;
+}
+// Level match: a plain volume change per sound, measured by tools/levels.mjs (levels.js). Sounds that need no
+// change, or everything when the box is unticked, skip the gain stage and play exactly as the file is.
+let levelOn = true;
+try { levelOn = localStorage.getItem('level') !== '0'; } catch (e) {}
+function levelDb(coll, item) {
+  const v = levelOn && window.LEVELS && LEVELS[`${coll.id}/${item.id}`];
+  return v ? v.gain : 0;
+}
+const dbToLin = db => Math.pow(10, db / 20);
+function connectOut(node) {
+  node.disconnect();
+  const db = P.coll ? levelDb(P.coll, P.coll.items[P.idx]) : 0;
+  if (db) { P.lg.gain.value = dbToLin(db); node.connect(P.lg); }
+  else { node.connect(P.ac.destination); node.connect(P.an); }
+}
+function setLevelMatch(on) {
+  levelOn = on;
+  try { localStorage.setItem('level', on ? '1' : '0'); } catch (e) {}
+  if (P.src) connectOut(P.src);
+  if (P.buffer && P.buffer.stream && P.buffer.node) connectOut(P.buffer.node);
+  CL.layers.forEach(L => setLayer(L, 'vol', L.vol)); // collage layers carry their level in their own gain
+  ui();
 }
 const audioUrl = (coll, item) => `audio/${coll.id}/${item.id}.${item.ext || 'flac'}`;
 function getBuf(item, coll) {
@@ -90,7 +114,8 @@ function start(off) {
   const d = P.buffer.duration, inList = P.lpos !== null;
   if (P.buffer.stream) { // streamed piece: plays once in a playlist, follows the Loop box otherwise
     const m = P.buffer, el = m.el;
-    if (!m.node) { m.node = ac.createMediaElementSource(el); m.node.connect(ac.destination); m.node.connect(P.an); }
+    if (!m.node) m.node = ac.createMediaElementSource(el);
+    connectOut(m.node);
     el.loop = !inList && P.loop;
     el.currentTime = Math.min(off % d, Math.max(0, d - .05));
     el.onended = () => {
@@ -105,7 +130,7 @@ function start(off) {
   }
   const s = ac.createBufferSource();
   s.buffer = P.buffer; s.loop = inList || P.loop;
-  s.connect(ac.destination); s.connect(P.an);
+  connectOut(s);
   s.onended = () => {
     if (P.src !== s) return;
     P.src = null; P.playing = false; P.offset = 0;
@@ -253,6 +278,7 @@ let collMsg = '';
 const layerBuf = L => { const r = resolve(L); return getBuf(r.coll.items[r.idx], r.coll); };
 // Pitch is varispeed: semitones plus fine cents. At 0 / 0 the rate is exactly 1, so the file plays untouched.
 const layerRate = L => Math.pow(2, (L.semi * 100 + (L.cents || 0)) / 1200);
+const layerGain = L => L.mute ? 0 : L.vol * (() => { const r = resolve(L); return dbToLin(levelDb(r.coll, r.coll.items[r.idx])); })();
 
 // Tone, one knob: left rolls off highs (low-pass 20 kHz -> 400 Hz), right rolls off lows (high-pass 20 Hz -> 2 kHz).
 // At centre the filter is taken out of the path entirely.
@@ -267,7 +293,7 @@ function applyTone(n, v, t) {
 function layerGraph(ac, out, L, buf, when, fadeIn = 0) {
   const f = ac.createBiquadFilter(), g = ac.createGain(), p = ac.createStereoPanner();
   f.Q.value = .707; f.connect(g); g.connect(p); p.connect(out); p.pan.value = L.pan;
-  const target = L.mute ? 0 : L.vol;
+  const target = layerGain(L);
   if (fadeIn > 0) { g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(target, when + fadeIn); }
   else g.gain.value = target;
   let n;
@@ -380,7 +406,7 @@ function setLayer(L, k, v) {
   L[k] = v; saveCollage();
   const n = C.nodes.get(L.u); if (!n) return;
   const t = P.ac.currentTime; // short glides, so moving a control never clicks
-  if (k === 'vol' || k === 'mute') n.g.gain.setTargetAtTime(L.mute ? 0 : L.vol, t, .02);
+  if (k === 'vol' || k === 'mute') n.g.gain.setTargetAtTime(layerGain(L), t, .02);
   if (k === 'pan') n.p.pan.setTargetAtTime(L.pan, t, .02);
   if (k === 'tone') applyTone(n, L.tone, t);
   if ((k === 'semi' || k === 'cents') && !C.driftTimer) {
@@ -702,6 +728,7 @@ function openDoc(k) {
 $('bPlay').onclick = toggle; $('bStop').onclick = stop;
 $('bPrev').onclick = () => step(-1); $('bNext').onclick = () => step(1);
 $('cLoop').onchange = e => setLoop(e.target.checked);
+$('cLevel').onchange = e => setLevelMatch(e.target.checked);
 $('cMosh').checked = moshPref;
 $('cMosh').onchange = e => { moshPref = e.target.checked; try { localStorage.setItem('mosh', moshPref ? '1' : '0'); } catch (x) {} };
 $('prog').onclick = e => { const r = $('prog').getBoundingClientRect(); seek((e.clientX - r.left) / r.width); };
@@ -710,8 +737,10 @@ function ui() {
   const it = P.coll && P.coll.items[P.idx];
   const inList = P.lpos !== null ? ` (playlist ${P.lpos + 1}/${PL.entries.length})` : '';
   $('playTitle').textContent = it ? `Now Playing — ${it.title}${inList}` : 'Now Playing';
+  const lvl = it ? levelDb(P.coll, it) : 0;
   $('screenLbl').textContent = C.playing ? `COLLAGE ▸ ${C.nodes.size} LAYER${C.nodes.size === 1 ? '' : 'S'}` : !it ? 'NO SIGNAL' : P.error ? 'READ ERROR' : P.loading ? `LOADING ▸ ${it.title.toUpperCase()}` :
-    `CH1 ▸ ${it.title.toUpperCase()}${P.playing ? '' : '  ❚❚'}`;
+    `CH1 ▸ ${it.title.toUpperCase()}${lvl ? `  LVL ${lvl > 0 ? '+' : ''}${lvl.toFixed(1)} dB` : ''}${P.playing ? '' : '  ❚❚'}`;
+  $('cLevel').checked = levelOn;
   $('bPlay').textContent = P.playing ? '❚❚' : '▶';
   $('cLoop').checked = P.loop;
   document.querySelectorAll('#listRows tr').forEach((r, n) => r.classList.toggle('sel', P.lpos === n));
