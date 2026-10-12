@@ -39,11 +39,11 @@
   <div class="flow">
     <section>
       <div class="tb"><span>Awards (Selected)</span><small id="nAw"></small></div>
-      <table><thead><tr><th>Year</th><th>Funder</th><th>Program</th><th style="text-align:right">Amount</th><th>Awarded to</th></tr></thead><tbody id="aw"></tbody></table>
+      <table class="grants"><colgroup><col style="width:44px"><col style="width:168px"><col style="width:236px"><col style="width:68px"><col></colgroup><thead><tr><th>Year</th><th>Funder</th><th>Program</th><th style="text-align:right">Amount</th><th>Awarded to</th></tr></thead><tbody id="aw"></tbody></table>
     </section>
     <section>
-      <div class="tb"><span>Funded Mentorships</span><small id="nMen"></small></div>
-      <table><thead><tr><th>Year</th><th>Funder</th><th>Program</th><th>Recipient</th><th>Role</th></tr></thead><tbody id="men"></tbody></table>
+      <div class="tb"><span>Funded Projects</span><small id="nMen"></small></div>
+      <table class="grants"><colgroup><col style="width:44px"><col style="width:168px"><col style="width:236px"><col style="width:120px"><col></colgroup><thead><tr><th>Year</th><th>Funder</th><th>Program</th><th>Recipient</th><th>Role</th></tr></thead><tbody id="men"></tbody></table>
     </section>
     <div class="win notepad">
       <div class="tb"><span>Biography.txt — Notepad</span></div>
@@ -85,10 +85,14 @@ const DEV = [
   ['Wolf Parade', 'Assistant Audio Engineer & Recording Internship', '2018'],
   ['Vancouver Community College', 'Composition & Bass Major', '2012–2014'],
 ];
-// Grants other artists received that paid Shilo as mentor (amounts were theirs, so not listed)
+// Grants other artists received that paid Shilo (amounts were theirs, so not listed)
 const MENTOR = [
-  ['2024', 'Canada Council for the Arts', 'Professional Development', 'Ryan Haché', 'Paid mentor'],
-  ['2024', 'Canada Council for the Arts', 'Professional Development', 'Sofia Miller', 'Paid mentor'],
+  ['2025', 'Creative BC', 'Artist Development', 'Ghost Darling', 'Producer / Engineer'],
+  ['2024', 'Canada Council for the Arts', 'Professional Development', 'Ryan Haché', 'Mentor'],
+  ['2024', 'Canada Council for the Arts', 'Professional Development', 'Sofia Miller', 'Mentor'],
+  ['2024', 'BC Arts Council', 'Professional Development', 'Sofia Miller', 'Mentor'],
+  ['2024', 'Creative BC', 'Artist Development', 'Sofia Miller', 'Producer / Engineer'],
+  ['2024', 'Creative BC', 'Artist Development', 'Joseph LeRoux', 'Producer / Engineer'],
 ];
 const PROJ = [
   ['a small sounder', 'Stz’uminus/Yellow Point, BC', '2024–present', 'Co-Founder, Musician, Composer'],

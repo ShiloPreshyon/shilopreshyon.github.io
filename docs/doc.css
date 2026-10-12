@@ -89,3 +89,4 @@ tr.folder svg { width: 12px; height: 12px; vertical-align: -2px; margin-right: 5
 .roomy table { font-size: 11px; }
 .roomy td { padding: 3.5px 5px; }
 .roomy section { margin-bottom: 20px; }
+.grants { table-layout: fixed; }
