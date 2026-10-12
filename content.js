@@ -5,9 +5,51 @@ window.SITE = {
   tagline: "sound · research",
   email: "spsounddirectory@proton.me", // TODO: move to an address on the site's own domain
 
-  about: `Shilo Preshyon is a sound artist, collage practitioner, and audio engineer of mixed heritage, based in Yellow Point, BC on unceded Stz’uminus territory. Their practice centers on a decade-long personal sound archive drawn from field recordings, studio sessions, tape experiments, and improvised material accumulated across many contexts and collaborations. Working through collage as a primary method, Shilo investigates what it means to develop a relationship to place and its materials that is reciprocal rather than extractive, asking what the artist owes the sounds they gather, and what those sounds carry into the work.
+  // The desktop's Readme.txt: a guide to the site. {email} is filled in from above.
+  readme: `THE BEAUTIFUL RESEARCH DIRECTORY
+Shilo Preshyon · sound · research
 
-Shilo operates Risqué Disque Studios in Yellow Point, a shared space with Fifthline Management and Headwater Music, where they work as engineer, producer, and mentor to emerging artists. Active collage and sound design projects include a small sounder, Bronfree Films, and Soup du Jour. Shilo has received funding from Canada Council for the Arts and Creative BC across multiple cycles.`,
+Welcome. This is a working archive of sound: field recordings, studio sessions, tape experiments and improvised material, gathered over many years and opened here one folder at a time.
+
+
+WHAT'S HERE
+
+Work          collections of sound, a folder each
+Playlist      your own sequence of loops
+Night Water   a dark, full-screen listening room
+CV.pdf        for applications and paperwork
+Bio.pdf       the short version
+Contact       write to Shilo
+
+
+HOW TO LISTEN
+
+· Click any file in a Work folder to play it. Loops repeat seamlessly until you choose something else; untick Loop to hear each once.
+· Space bar plays and pauses. ⏮ ⏭ step through the folder. Click the progress bar to move within a sound.
+· Press + beside a loop to add it to your Playlist. Choose how many times each one repeats, then Play all. "Copy share link" sends your arrangement to someone else.
+· Open a .portal file, or the Night Water icon, to hear a collection in the dark. Esc brings you back.
+· Windows can be dragged around and closed. The taskbar brings them back.
+· Headphones or good speakers are best.
+
+
+ABOUT THE SOUND
+
+Every file is lossless, 24-bit / 48 kHz FLAC, played straight from the file with nothing added along the way: no streaming service, no lossy compression, no processing.
+
+The picture in Now Playing is the sound itself. Each row of points is a moment of its spectrum, low frequencies on the left, drifting away from you as it plays. Untick Datamosh if you'd like it to stay still between files.
+
+
+ABOUT SHILO
+
+Shilo Preshyon is a sound artist, collage practitioner and audio engineer based in Yellow Point, BC, on unceded Stz’uminus territory. Their practice works through collage, asking what an artist owes the sounds they gather. The full bio and CV are on the desktop.
+
+
+CONTACT
+
+{email}
+
+No ads, no analytics, no accounts. Your playlist is kept only in your own browser.`,
+
 
   // PDFs made from docs/*.html with tools/make-pdfs.swift; the viewer window shows the HTML page.
   docs: {

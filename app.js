@@ -212,8 +212,9 @@ function placeWindows() {
   const dw = Math.min(580, W - 140);
   set('w-dir', 112, 28, dw);
   const pw = Math.min(460, W - 140);
-  set('w-play', Math.max(112, Math.min(112 + dw - 120, W - pw - 24)), Math.max(140, Math.min(352, H - 30 - 300)), pw);
-  set('w-about', 150, 70, Math.min(440, W - 180));
+  set('w-play', 160, Math.max(140, Math.min(400, H - 30 - 310)), pw); // under the Work folder, clear of the Readme
+  const rw = Math.min(460, W - 140);
+  set('w-about', Math.max(150, W - rw - 24), 28, rw);
   set('w-mail', 190, 130, 320);
   set('w-doc', 140, 14, Math.min(720, W - 160));
   const lw = Math.min(440, W - 140);
@@ -303,14 +304,14 @@ $('dirUp').onclick = () => openDir(null);
 const latest = S.collections[0];
 const launch = {
   work: () => openDir(dirPath ?? latest.id),
-  about: () => { openWin('w-about'); setHash('#/about'); },
+  about: () => { openWin('w-about'); setHash('#/readme'); },
   contact: () => { openWin('w-mail'); setHash('#/contact'); },
   portal: () => openPortal(P.coll || latest),
   playlist: () => { openWin('w-list'); renderList(); setHash('#/playlist'); },
   cv: () => openDoc('cv'),
   bio: () => openDoc('bio'),
 };
-const icons = [['Work', 'cd', 'work'], ['About.txt', 'doc', 'about'], ['CV.pdf', 'pdf', 'cv'], ['Bio.pdf', 'pdf', 'bio'],
+const icons = [['Work', 'cd', 'work'], ['Readme.txt', 'doc', 'about'], ['CV.pdf', 'pdf', 'cv'], ['Bio.pdf', 'pdf', 'bio'],
   ['Playlist', 'list', 'playlist'],
   ['Contact', 'mail', 'contact'], ['Night Water', 'moon', 'portal']];
 icons.forEach(([n, ic, k]) => {
@@ -327,7 +328,7 @@ $('bStart').onclick = e => { e.stopPropagation(); $('bStart').classList.toggle('
 document.addEventListener('pointerdown', e => {
   if (!$('startMenu').contains(e.target) && e.target !== $('bStart')) { $('startMenu').classList.add('hide'); $('bStart').classList.remove('on'); }
 });
-$('aboutTxt').textContent = `${S.name.toUpperCase()}\n${S.tagline}\n\n${S.about}\n\n— CV.pdf and Bio.pdf are on the desktop.`;
+$('aboutTxt').textContent = S.readme.replace('{email}', S.email);
 $('mailLink').href = 'mailto:' + S.email; $('mailLink').textContent = S.email;
 document.querySelector('[data-ico=mail]').innerHTML = ICO.mail;
 
@@ -404,7 +405,7 @@ function setHash(h) { if (!routing && location.hash !== h) history.replaceState(
 function route() {
   routing = true;
   const p = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
-  if (p[0] === 'about') launch.about();
+  if (p[0] === 'readme' || p[0] === 'about') launch.about();
   else if (p[0] === 'contact') launch.contact();
   else if (S.docs[p[0]]) openDoc(p[0]);
   else if (p[0] === 'playlist') {
@@ -448,7 +449,11 @@ const tick = () => { const n = new Date(); $('clock').textContent = n.getHours()
 placeWindows();
 addEventListener('resize', placeWindows);
 openWin('w-play');
-if (location.hash.length > 2) route(); else openDir(latest.id);
+// First visit: the Readme opens beside the Work folder.
+let seen = true;
+try { seen = !!localStorage.getItem('seen'); localStorage.setItem('seen', '1'); } catch (e) {}
+if (location.hash.length > 2) route();
+else { if (!seen) openWin('w-about'); openDir(latest.id); }
 addEventListener('hashchange', route);
 renderList(); ui(); tick(); setInterval(tick, 10000);
 requestAnimationFrame(frame);
