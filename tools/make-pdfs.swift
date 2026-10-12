@@ -18,6 +18,10 @@ final class Runner: NSObject, WKNavigationDelegate {
     guard i < jobs.count else { exit(0) }
     web.load(URLRequest(url: URL(string: jobs[i].0)!))
   }
+  func webView(_ w: WKWebView, didFail _: WKNavigation!, withError e: Error) { fail(e) }
+  func webView(_ w: WKWebView, didFailProvisionalNavigation _: WKNavigation!, withError e: Error) { fail(e) }
+  func webViewWebContentProcessDidTerminate(_ w: WKWebView) { print("✗ WebKit content process died"); exit(1) }
+  func fail(_ e: Error) { print("✗ \(jobs[i].0): \(e.localizedDescription)"); exit(1) }
   func webView(_ w: WKWebView, didFinish _: WKNavigation!) {
     Task { @MainActor in
       // Wait until doc.js has finished (fonts loaded, bands drawn, overflow checked).
@@ -55,4 +59,6 @@ final class Runner: NSObject, WKNavigationDelegate {
 let app = NSApplication.shared
 app.setActivationPolicy(.prohibited)
 let runner = Runner()
+// Watchdog: never hang silently.
+DispatchQueue.main.asyncAfter(deadline: .now() + 60) { print("✗ timed out on job \(runner.i + 1) of \(jobs.count)"); exit(1) }
 app.run()
