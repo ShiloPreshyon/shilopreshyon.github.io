@@ -395,8 +395,28 @@ function closePortal() { $('portal').classList.add('hide'); portalColl = null; s
 $('pClose').onclick = closePortal;
 addEventListener('keydown', e => {
   if (e.key === 'Escape' && portalColl) closePortal();
-  if (e.key === ' ' && e.target === document.body) { e.preventDefault(); toggle(); }
+  const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.metaKey || e.ctrlKey || e.altKey;
+  if (typing) return;
+  // Space always means play/pause; blur a focused button first so it isn't also clicked on key-up.
+  if (e.key === ' ') { e.preventDefault(); if (/^(BUTTON|A)$/.test(e.target.tagName)) e.target.blur(); toggle(); }
+  // Arrow keys surf: up/down play the previous/next file (stopping at the ends), left/right move within it.
+  else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); surf(e.key === 'ArrowDown' ? 1 : -1); }
+  else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && P.buffer) {
+    e.preventDefault();
+    const d = P.buffer.duration;
+    seek(Math.max(0, Math.min(.999, pos() / d + (e.key === 'ArrowRight' ? .1 : -.1))));
+  }
 });
+function surf(d) {
+  if (P.lpos !== null) { const n = P.lpos + d; if (n >= 0 && n < PL.entries.length) listPlay(n); return; }
+  const c = P.coll || (dirPath && findColl(dirPath)) || latest;
+  const n = P.coll ? P.idx + d : (d > 0 ? 0 : c.items.length - 1);
+  if (n < 0 || n >= c.items.length) return;
+  if (!portalColl) openWin('w-play');
+  select(c, n);
+  // keep the playing row in view in the Work window
+  if (dirPath === c.id) { const r = document.querySelectorAll('#dirRows tr')[n]; if (r) r.scrollIntoView({ block: 'nearest' }); }
+}
 
 /* ---------------- routing ---------------- */
 // Every window has an address, so a client can be sent straight to one loop: #/work/<collection>/<item>

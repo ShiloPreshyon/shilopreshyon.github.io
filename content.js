@@ -25,6 +25,7 @@ Contact       write to Shilo
 HOW TO LISTEN
 
 · Click any file in a Work folder to play it. Loops repeat seamlessly until you choose something else; untick Loop to hear each once.
+· ↑ ↓ arrow keys move through the files, playing each one as you go. ← → move within a sound.
 · Space bar plays and pauses. ⏮ ⏭ step through the folder. Click the progress bar to move within a sound.
 · Press + beside a loop to add it to your Playlist. Choose how many times each one repeats, then Play all. "Copy share link" sends your arrangement to someone else.
 · Open a .portal file, or the Night Water icon, to hear a collection in the dark. Esc brings you back.
