@@ -15,6 +15,7 @@ Welcome. This is a working archive of sound: field recordings, studio sessions, 
 WHAT'S HERE
 
 Work          collections of sound, a folder each
+Studio        productions and mixes (inside Work)
 Playlist      your own sequence of loops
 Night Water   a dark, full-screen listening room
 CV.pdf        for applications and paperwork
@@ -76,6 +77,20 @@ No ads, no analytics, no accounts. Your playlist is kept only in your own browse
         { id: "june-12-2026-3", title: "June 12 2026 #3", date: "2026-06-12", len: 11.15 },
         { id: "june-19-2026-1", title: "June 19 2026 #1", date: "2026-06-19", len: 14.60 },
         { id: "june-19-2026-2", title: "June 19 2026 #2", date: "2026-06-19", len: 60.34 },
+      ],
+    },
+    {
+      // Productions and mixes. Items play through once (loop: false); ext: the file type when it isn't flac.
+      id: "studio",
+      title: "Studio",
+      sub: "Production & engineering",
+      kind: "studio",
+      year: 2019,
+      note: "Selected productions and mixes.",
+      loop: false,
+      items: [
+        { id: "cartoon-lizard-neighbouring-hotels", title: "Neighbouring Hotels", artist: "Cartoon Lizard",
+          release: "Sentinels EP", year: 2019, role: "Producer, Audio Engineer", len: 221.52, ext: "mp3" },
       ],
     },
   ],

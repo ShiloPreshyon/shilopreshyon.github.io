@@ -35,7 +35,7 @@ function ctx() {
 }
 function getBuf(item, coll) {
   if (!P.cache.has(item.id)) {
-    const p = fetch(`audio/${coll.id}/${item.id}.flac`)
+    const p = fetch(`audio/${coll.id}/${item.id}.${item.ext || 'flac'}`)
       .then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
       .then(a => ctx().decodeAudioData(a));
     p.catch(() => P.cache.delete(item.id));
@@ -47,6 +47,7 @@ async function select(coll, idx, autoplay = true, lpos = null) {
   const g = ++gen;
   ctx().resume();
   stopSrc();
+  if (coll !== P.coll) P.loop = coll.loop !== false; // loops repeat by default, Studio tracks play through
   Object.assign(P, { coll, idx, lpos, offset: 0, playing: false, loading: true, error: false, buffer: null });
   if (moshPref) Cloud.mosh(3000);
   if (lpos === null) setHash(`#/work/${coll.id}/${coll.items[idx].id}`);
@@ -290,11 +291,13 @@ function renderDir() {
   }
   $('dirTitle').textContent = `${c.title} — ${c.sub}`;
   $('dirAddr').textContent = `C:\\Work\\${c.title} — ${c.sub}`;
-  $('dirHead').innerHTML = '<th>Name</th><th>Date</th><th>Length</th><th>Type</th><th title="Add to playlist">+</th>';
-  c.items.forEach((it, i) => rows.appendChild(row('wav', [it.title, it.date, fmt(it.len), 'FLAC audio'], () => {
+  const studio = c.kind === 'studio';
+  $('dirHead').innerHTML = studio ? '<th>Name</th><th>Artist</th><th>Role</th><th>Year</th><th>Length</th><th title="Add to playlist">+</th>'
+    : '<th>Name</th><th>Date</th><th>Length</th><th>Type</th><th title="Add to playlist">+</th>';
+  c.items.forEach((it, i) => rows.appendChild(row('wav', studio ? [it.title, it.artist, it.role, it.year, fmt(it.len)] : [it.title, it.date, fmt(it.len), 'FLAC audio'], () => {
     openWin('w-play'); select(c, i);
   }, P.coll === c && P.idx === i, () => addToList(c, i))));
-  rows.appendChild(row('moon', [`${c.title} — Night Water`, '', '', 'Portal'], () => openPortal(c)));
+  rows.appendChild(row('moon', [`${c.title} — Night Water`, '', '', ...(studio ? ['', ''] : ['Portal'])], () => openPortal(c)));
   $('dirCount').textContent = `${c.items.length + 1} object(s)`;
   $('dirNote').textContent = c.note;
 }
