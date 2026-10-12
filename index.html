@@ -76,6 +76,20 @@
     <div class="status"><div id="docName"></div><div id="docPages"></div><div>US Letter · PDF</div></div>
   </div>
 
+  <div class="win hide" id="w-list" data-title="Playlist">
+    <div class="tb"><span>Playlist</span><button data-close aria-label="Close">✕</button></div>
+    <div class="toolbar">
+      <button class="btn98" id="listPlay">▶ Play all</button>
+      <button class="btn98" id="listShare">Copy share link</button>
+      <button class="btn98" id="listClear">Clear</button>
+      <label class="reps">Repeat each <select id="listReps"><option>1</option><option>2</option><option>4</option><option>8</option><option>16</option></select>×</label>
+    </div>
+    <div class="inset list short">
+      <table><thead><tr><th>#</th><th>Name</th><th>From</th><th>Length</th><th></th></tr></thead><tbody id="listRows"></tbody></table>
+    </div>
+    <div class="status"><div id="listCount"></div><div id="listMsg"></div></div>
+  </div>
+
   <div class="win hide" id="w-mail" data-title="Contact">
     <div class="tb"><span>Contact</span><button data-close aria-label="Close">✕</button></div>
     <div class="dlg"><span class="dlg-ico" data-ico="mail"></span>

@@ -11,6 +11,12 @@ python3 -m http.server 8642
 
 then open http://localhost:8642 (audio needs a server; opening the file directly won't load it).
 
+## Visitor playlist
+
+The + button next to any loop adds it to the visitor's Playlist window. Each loop repeats seamlessly 1–16 times,
+then the next one starts. It's saved only in their browser; "Copy share link" makes a link like
+`#/playlist/<repeats>/<collection>~<item>,…` that loads the same playlist anywhere.
+
 ## Adding a collection
 
 1. `tools/encode.sh audio/<collection-id> /path/to/*.wav` — lossless FLAC, same bit depth and rate.

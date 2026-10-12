@@ -69,6 +69,19 @@ tr.sel td { background: var(--sel); color: #fff; }
 .opts { display: flex; gap: 16px; margin-top: 6px; flex-wrap: wrap; }
 .opts label { display: flex; align-items: center; gap: 4px; }
 
+/* playlist */
+.mini { font: 9px var(--ui); width: 17px; height: 15px; padding: 0; background: var(--face); border: 1px solid;
+  border-color: var(--hi) var(--dk) var(--dk) var(--hi); cursor: pointer; line-height: 1; }
+.mini:active { border-color: var(--dk) var(--hi) var(--hi) var(--dk); }
+td.add { width: 22px; padding: 1px 3px; }
+td.ctl { white-space: nowrap; padding: 1px 3px; width: 60px; }
+td.num { color: var(--lo); width: 22px; }
+td.empty { color: var(--lo); white-space: normal; padding: 10px; }
+.list.short { height: 200px; }
+.reps { margin-left: auto; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.reps select { font: 11px var(--ui); }
+.task.flash { background: var(--sel); color: #fff; }
+
 /* document viewer */
 .toolbar a.btn98 { text-decoration: none; display: inline-block; }
 .docframe { background: #808080; height: calc(100vh - 150px); min-height: 360px; }
