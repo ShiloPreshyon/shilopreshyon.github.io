@@ -5,11 +5,12 @@ window.SITE = {
   tagline: "sound · image · research",
   email: "spsounddirectory@proton.me", // TODO: move to an address on the site's own domain
 
-  // TODO: real bio and statement
-  about: `Short bio goes here: two or three sentences in third person,
-the version a grant panel reads first.
+  about: `Shilo Preshyon is a sound artist, collage practitioner, and audio engineer of mixed Lebanese, Mi'kmaq, and Acadian heritage, based in Yellow Point, BC on unceded Stz'uminus territory. Their practice centers on a decade-long personal sound archive drawn from field recordings, studio sessions, tape experiments, and improvised material accumulated across many contexts and collaborations. Working through collage as a primary method, Shilo investigates what it means to develop a relationship to place and its materials that is reciprocal rather than extractive, asking what the artist owes the sounds they gather, and what those sounds carry into the work.
 
-Artist statement goes here: what the work listens for, and why.`,
+Shilo operates Risque Disque Studios in Yellow Point, a shared space with Fifthline Management and Headwater Music, where they work as engineer, producer, and mentor to emerging artists. Professional credits include Cameron Whitcomb, Crack Cloud, Spencer Krug, Hope Slide, and Backseat Lovers. Active collage and sound design projects include a small sounder, Bronfree Films, and Soup Du Jour. Shilo has received funding from Canada Council for the Arts and Creative BC across multiple cycles, and holds mentorship from composer Jonathan Scherk, an artist on the Berlin-based label Fatiche.`,
+
+  // Made from docs/cv.html and docs/bio.html with tools/make-pdfs.swift
+  files: { cv: "files/Shilo-Preshyon-CV.pdf", bio: "files/Shilo-Preshyon-Bio.pdf" },
 
   collections: [
     {

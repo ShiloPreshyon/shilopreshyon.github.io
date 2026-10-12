@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shilo Preshyon — CV</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+
+<!-- ============ PAGE 1 ============ -->
+<div class="page">
+  <div class="band">
+    <canvas></canvas>
+    <div class="who"><h1>SHILO CREED PRESHYON</h1><div class="where">Stz’uminus / Yellow Point, BC</div></div>
+    <div class="portrait win"><div class="tb"><span>portrait.jpg</span></div><div class="inset"><img src="portrait.jpg" alt="Portrait of Shilo Preshyon"></div></div>
+  </div>
+  <div class="addr"><div class="field"><span>Address</span>C:\Shilo Preshyon\CV</div><div class="contact" data-contact></div></div>
+  <div class="flow roomy">
+    <section>
+      <div class="tb"><span>Profile</span></div>
+      <p class="lead">Shilo Preshyon is a producer, composer, recording artist, performer, multi-instrumental and sound engineer based in Stz’uminus/Yellow Point, BC. Shilo is fluent with Pro Tools, Soundforge, Ableton, and Logic DAWS, recording equipment &amp; processes, analog and digital rack gear, tape machines, samplers, midi controllers, and audio plugins. Shilo is also a session pianist, bassist, and guitarist. Rooted in a lived experience with disability and trauma as well as a background in social work, Shilo is here to help others capture and translate their sonic expressions.</p>
+    </section>
+    <section>
+      <div class="tb"><span>Professional Development</span><small id="nDev"></small></div>
+      <table><thead><tr><th>Name</th><th>Program</th><th>Date</th></tr></thead><tbody id="dev"></tbody></table>
+    </section>
+    <section>
+      <div class="tb"><span>Projects &amp; Performances</span><small id="nProj"></small></div>
+      <table><thead><tr><th>Project</th><th>Place</th><th>Years</th><th>Role</th></tr></thead><tbody id="proj"></tbody></table>
+    </section>
+  </div>
+</div>
+
+<!-- ============ PAGE 2 ============ -->
+<div class="page">
+  <div class="band thin"><canvas></canvas><div class="who"><h1>SHILO CREED PRESHYON</h1></div></div>
+  <div class="addr"><div class="field"><span>Address</span>C:\Shilo Preshyon\CV\Awards &amp; Biography</div><div class="contact" data-contact></div></div>
+  <div class="flow">
+    <section>
+      <div class="tb"><span>Awards (Selected)</span><small id="nAw"></small></div>
+      <table><thead><tr><th>Year</th><th>Funder</th><th>Program</th><th style="text-align:right">Amount</th><th>Awarded to</th></tr></thead><tbody id="aw"></tbody></table>
+    </section>
+    <div class="win notepad">
+      <div class="tb"><span>Biography.txt — Notepad</span></div>
+      <div class="menu"><span><u>F</u>ile</span><span><u>E</u>dit</span><span><u>S</u>earch</span></div>
+      <div class="inset text">
+        <p>Shilo Preshyon is a Vancouver Island–based musician, artist, producer, and audio engineer of mixed Lebanese, Mi'kmaq, and Acadian heritage. A dedicated community builder, he connects artists across the West Coast through collaboration and mentorship. His work reflects the natural and social environments that surround him, drawing inspiration from found materials, technology, and the intersection of art, ecology, and healing.</p>
+        <p>Primarily self-taught in music, recording, and sound design, Shilo approaches his craft with curiosity and experimentation. His background in community mental health and support work, including time at the Portland Hotel Society and the Garth Homer Society, informs his practice with empathy and a deep commitment to accessibility and inclusion in the arts.</p>
+        <p>Living with chronic migraines, autoimmune disorders, and PTSD, Shilo channels personal challenges into creative expression and connection, using his art to explore resilience and grounding in the contemporary world. He is currently the head engineer and host of Risque Disque Studios, an artist-run recording and residency space in Yellow Point, BC, where he prioritizes mentorship and recording opportunities for underrepresented artists and emerging engineers. He is also a founding member of the artist collectives Ba'as, a small sounder, Soup Du Jour, and Tasty Palm Leaf.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 3 ============ -->
+<div class="page">
+  <div class="band thin"><canvas></canvas><div class="who"><h1>SHILO CREED PRESHYON</h1></div></div>
+  <div class="addr"><div class="field"><span>Address</span>C:\Shilo Preshyon\CV\Audio Engineering &amp; Production</div><div class="contact" data-contact></div></div>
+  <div class="flow">
+    <section>
+      <div class="tb"><span>Audio Engineering &amp; Production</span><small id="nEng"></small></div>
+      <div class="legend"><b>P</b> producer · <b>E</b> audio engineer (<b>A</b> assistant, <b>D</b> drums) · <b>M</b> mixing · <b>S</b> mastering</div>
+      <div class="cols dense" id="eng"></div>
+    </section>
+  </div>
+</div>
+
+<script src="../cloud.js"></script>
+<script src="contact-private.js"></script>
+<script src="doc.js"></script>
+<script>
+const DEV = [
+  ['Joya AiR', 'Artist Residency, Andalucía, Spain', 'June 18–30, 2026'],
+  ['Lena Residency', 'Summer Cohort, Galiano Island', 'June 7–13, 2026'],
+  ['Jeff Ellis', 'Mixer Brain', '2025'],
+  ['Lena Residency', 'Fall Cohort', '2025'],
+  ['Philip Weinrobe', 'Mixing Course with School of Song', '2023'],
+  ['Justin Colletti', 'Mastering Demystified', '2020'],
+  ['Justin Colletti', 'Mixing Breakthroughs', '2020'],
+  ['Wolf Parade', 'Assistant Audio Engineer & Recording Internship', '2018'],
+  ['Vancouver Community College', 'Composition & Bass Major', '2012–2014'],
+];
+const PROJ = [
+  ['a small sounder', 'Stz’uminus/Yellow Point, BC', '2024–present', 'Co-Founder, Musician, Composer'],
+  ['You’re Listening To Clam Lombardi', 'Nanaimo, BC', '2024', 'Co-Founder, Live Performer, Musician'],
+  ['Soup du Jour', 'Gabriola, BC', '2023–present', 'Co-Founder, Recording Artist: Songwriter, Composer, Multi-Instrumentalist'],
+  ['Guy With Mixing Board', 'Nanaimo, BC', '2022', 'Founder, Composer, Musician'],
+  ['Catalogue of the Microbiome', 'Nanaimo, BC', '2022', 'Composer, Musician'],
+  ['Ba’as', 'Victoria, BC', '2021–2022', 'Co-Founder, Recording Artist: Songwriter, Composer, Multi-Instrumentalist'],
+  ['Cartoon Lizard', 'Victoria, BC', '2015–present', 'Co-Founder, Live Performer, Recording Artist: Songwriter, Composer, Multi-Instrumentalist on “Sentinels” EP (2019), “Bless You Thank You” EP (2020), Singles (2021–2023)'],
+];
+const AW = [
+  ['2026', 'Creative BC', 'Music Business Grant', '$10,000', 'Shilo Preshyon & S.P. Sound Directory'],
+  ['2026', 'Creative BC', 'Demo Recording Grant – Rebecca Runions', '$2,000', 'Shilo Preshyon'],
+  ['2026', 'Creative BC', 'Demo Recording Grant – Shilo Preshyon', '$2,000', 'Ritchie Hemphill & Shilo Preshyon'],
+  ['2025', 'Creative BC', 'Demo Recording Grant – Myles Dunne', '$2,000', 'Shilo Preshyon'],
+  ['2025', 'Creative BC', 'Demo Recording Grant – Broken Egg', '$2,000', 'Shilo Preshyon'],
+  ['2024', 'Canada Council for the Arts', 'Professional Development', '$10,000', 'Shilo Preshyon & Ryan Haché'],
+  ['2024', 'Canada Council for the Arts', 'Research and Creation', '$25,000', 'Shilo Preshyon & Ryan Haché'],
+  ['2024', 'Creative BC', 'Demo Recording Grant – Louis Belcourt', '$2,000', 'Shilo Preshyon'],
+  ['2024', 'Creative BC', 'Demo Recording Grant – Nell Jedrzejczyk', '$2,000', 'Shilo Preshyon'],
+  ['2021', 'Canada Council for the Arts', 'Digital Now Project Grant', '$100,000', 'Ba’as (Shilo Preshyon & Ritchie Hemphill)'],
+  ['2021', 'Creative BC', 'Amplify BC', '$4,800', 'Shilo Preshyon & Cartoon Lizard'],
+  ['2021', 'Canada Council for the Arts', 'Digital Originals', '', 'Shilo Preshyon & Cartoon Lizard'],
+];
+// Artist | release | roles (P producer, E engineer, A assistant eng., D drum eng., M mixing, S mastering)
+// (an array, not an object: objects sort number-like keys ascending)
+const ENG = [
+  ['2026', `Beth Sherlock|LP|EMS
+Fond|LP|M
+Troll Dolly|EP|M
+The Shindigs|EP|E
+Ethan Miller|Singles|E
+OC/DC|Singles|M
+Ryan Haché|Short films · sound design|
+Spencer Krug|Single|EM
+Hope Slide|LP|PEM
+Beth Sherlock|Singles|PEM
+Tasty Palm Leaf|Singles|PEMS`],
+  ['2025', `Intuition Media|Field recording|
+Rue McDonald|Singles|M
+Maita Waters|Singles|S
+Tyrel Peters|LP|S
+Trevor Lang|Singles|E
+The Great Apes|EP|EM
+Myles Dunne|EP|PEM
+Nathan Preshyon|Singles|M
+Post Drag|Single|M
+OC/DC|Singles|M
+Broken Egg|Singles|PEM
+Spank Williams|Single|PEM
+Daniel Majer|Live sessions|E
+Sofia Miller|LP|PEM
+Ghost Darling|LP|PEM
+Isabella And The Sprouts|LP|PEM
+Ella Slaughter|Single|PEM
+Chase Varnes|Single|PEM
+Tristan Longman|Single|PEM
+Rebecca Runions|LP|M
+The Shindigs|Singles|PE
+Maunders|Single|PEM
+Jesse Kennedy|LP|PE
+Moongrove|Single|PE
+Fond|LP|PE`],
+  ['2024', `Sophie Noel|LP|E
+Shindigs|LP|EMS
+Cameron Whitcomb|Singles|E
+Backseat Lovers|LP|A
+Deep Dark Woods|LP|A
+Whollum|EP|EM
+Matt St John|EP|S
+Book House Boys|LP|S
+Isabelle & The Sprouts|EP|EM
+Each Others Mothers|LP|E
+Trevor Lang|LP|E
+Prophecy Club|LP|E
+Super Krystal|LP|E
+Nell Jedrzejczyk|EP|PEMS
+Steph Wall|LP|EMS
+ti-loup|Singles|PEMS
+Chilko in the Rosemary|Singles|EMS
+Maunders|Singles|EMS
+Tyrel Peters|Singles|E`],
+  ['2023–2019', `Steph Wall|Singles|MS
+Steph Wall|LP|PEMS
+The Shindigs|LP|EM
+Whollum|EP|PEMS
+OK Charlie|LP|A
+Chilko and the Rosemary|LP|AM
+Cameron Gunn|LP|S
+Påter|LP|A
+Trevor Lang|EP|E
+Clint Knottingham|Triple LP|EMS
+Ba’as|LP|E
+Your Friend Brennan|EP|E
+Maunders|Single|PEM
+Tyrel Peters|LP|PEMS
+Jared Popma|LP|EMS
+Willow|Singles|M
+Camperdown Family Band|LP|ES
+Crying High|LP|E
+Behaviours|LP|A
+Nature Walk|EP|D
+Aging Pony|LP|E
+Niloo|LP|PEM
+Fond|LP|EM
+Your Friend Brennan|LP|E
+Trevor Lang|Single|E
+Crack Cloud|LP|A
+Troll Dolly|Single|EM
+Sophie Noel/Magnolia|LP|E
+Cartoon Lizard|LP|E
+Michael C. Duguay|Singles|D
+Teenage Wedding|LP|E
+Sunny Bayou & The Bandits|LP|PEMS
+Red Sphere|LP|A
+Niloo|Single|PEM
+Cartoon Lizard|EP “Bless You, Thank You”|PE
+Cartoon Lizard|EP “Sentinels”|PE`],
+];
+
+const rows = (el, data, fmt) => { document.getElementById(el).innerHTML = data.map(fmt).join(''); };
+rows('dev', DEV, ([a, b, c]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td><td class="yr">${esc(c)}</td></tr>`);
+rows('proj', PROJ, ([a, b, c, d]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td><td class="yr">${esc(c)}</td><td>${esc(d)}</td></tr>`);
+rows('aw', AW, ([y, f, p, a, t]) => `<tr><td class="yr">${y}</td><td><b>${esc(f)}</b></td><td>${esc(p)}</td><td class="amt">${a || '—'}</td><td>${esc(t)}</td></tr>`);
+document.getElementById('nDev').textContent = `${DEV.length} object(s)`;
+document.getElementById('nProj').textContent = `${PROJ.length} object(s)`;
+document.getElementById('nAw').textContent = `${AW.length} object(s)`;
+
+// Engineering credits: a role matrix split into two Explorer-style tables of equal height.
+const flat = [];
+let credits = 0;
+for (const [yr, txt] of ENG) {
+  flat.push({ yr });
+  txt.split('\n').forEach(l => { const [a, r, c] = l.split('|'); flat.push({ a, r, c }); credits++; });
+}
+const half = Math.ceil(flat.length / 2);
+let lastYr = '';
+const mark = (c, k) => c.includes(k) ? (k === 'A' || k === 'D' ? k : '●') : '';
+const table = list => '<table><thead><tr><th>Artist</th><th>Release</th><th class="mk">P</th><th class="mk">E</th><th class="mk">M</th><th class="mk">S</th></tr></thead><tbody>' +
+  list.map((x, i) => {
+    if (x.yr) { lastYr = x.yr; return `<tr class="folder"><td colspan="6">${FOLDER}${x.yr}</td></tr>`; }
+    const cont = i === 0 ? `<tr class="folder"><td colspan="6">${FOLDER}${lastYr} (cont.)</td></tr>` : '';
+    const e = x.c.includes('A') ? 'A' : x.c.includes('D') ? 'D' : mark(x.c, 'E');
+    return cont + `<tr><td><b>${esc(x.a)}</b></td><td>${esc(x.r)}</td><td class="mk">${mark(x.c, 'P')}</td><td class="mk">${e}</td><td class="mk">${mark(x.c, 'M')}</td><td class="mk">${mark(x.c, 'S')}</td></tr>`;
+  }).join('') + '</tbody></table>';
+document.getElementById('eng').innerHTML = `<div>${table(flat.slice(0, half))}</div><div>${table(flat.slice(half))}</div>`;
+document.getElementById('nEng').textContent = `${credits} credits`;
+
+finish('Curriculum Vitae');
+</script>
+</body>
+</html>

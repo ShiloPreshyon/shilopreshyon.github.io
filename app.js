@@ -11,6 +11,7 @@ const ICO = {
   folder: '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M1 3.5h5l1.5 2H15v8H1z" fill="#e6e6e6" stroke="#000"/><path d="M1 6.5h14" stroke="#000"/></svg>',
   doc: '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M3 1.5h7l3 3v10H3z" fill="#fff" stroke="#000"/><path d="M5 6.5h6M5 8.5h6M5 10.5h6M5 12.5h4" stroke="#000"/></svg>',
   mail: '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="1.5" y="3.5" width="13" height="9" fill="#fff" stroke="#000"/><path d="M1.5 3.5l6.5 5.5 6.5-5.5" fill="none" stroke="#000"/></svg>',
+  pdf: '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M3 1.5h7l3 3v10H3z" fill="#fff" stroke="#000"/><path d="M10 1.5v3h3" fill="none" stroke="#000"/><rect x="4" y="9" width="8" height="4" fill="#1d3a52"/><path d="M5 6.5h5" stroke="#000"/></svg>',
   wav: '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M3 1.5h7l3 3v10H3z" fill="#fff" stroke="#000"/><path d="M5 9v1M7 7v5M9 8v3M11 6v6" stroke="#1d3a52"/></svg>',
   moon: '<svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" fill="#000" stroke="#7fd0ff"/><path d="M9.5 3.5a4.5 4.5 0 1 0 3 7.5a3.6 3.6 0 1 1-3-7.5z" fill="#dbe8f0"/><path d="M3 13h10" stroke="#7fd0ff" stroke-dasharray="1 1"/></svg>',
 };
@@ -203,8 +204,11 @@ const launch = {
   about: () => { openWin('w-about'); setHash('#/about'); },
   contact: () => { openWin('w-mail'); setHash('#/contact'); },
   portal: () => openPortal(P.coll || latest),
+  cv: () => open(S.files.cv, '_blank', 'noopener'),
+  bio: () => open(S.files.bio, '_blank', 'noopener'),
 };
-const icons = [['Work', 'cd', 'work'], ['About.txt', 'doc', 'about'], ['Contact', 'mail', 'contact'], ['Night Water', 'moon', 'portal']];
+const icons = [['Work', 'cd', 'work'], ['About.txt', 'doc', 'about'], ['CV.pdf', 'pdf', 'cv'], ['Bio.pdf', 'pdf', 'bio'],
+  ['Contact', 'mail', 'contact'], ['Night Water', 'moon', 'portal']];
 icons.forEach(([n, ic, k]) => {
   const d = document.createElement('button');
   d.className = 'icon'; d.innerHTML = ICO[ic] + '<span></span>'; d.querySelector('span').textContent = n;
@@ -219,7 +223,7 @@ $('bStart').onclick = e => { e.stopPropagation(); $('bStart').classList.toggle('
 document.addEventListener('pointerdown', e => {
   if (!$('startMenu').contains(e.target) && e.target !== $('bStart')) { $('startMenu').classList.add('hide'); $('bStart').classList.remove('on'); }
 });
-$('aboutTxt').textContent = `${S.name.toUpperCase()}\n${S.tagline}\n\n${S.about}`;
+$('aboutTxt').textContent = `${S.name.toUpperCase()}\n${S.tagline}\n\n${S.about}\n\n— CV.pdf and Bio.pdf are on the desktop.`;
 $('mailLink').href = 'mailto:' + S.email; $('mailLink').textContent = S.email;
 document.querySelector('[data-ico=mail]').innerHTML = ICO.mail;
 

@@ -20,3 +20,16 @@ then open http://localhost:8642 (audio needs a server; opening the file directly
 
 Every view has a link: `#/work/<collection>`, `#/work/<collection>/<item>`, `#/portal/<collection>`,
 `#/about`, `#/contact`.
+
+## CV and bio PDFs
+
+Edit `docs/cv.html` / `docs/bio.html` (preview them at http://localhost:8642/docs/cv.html; a page that
+overflows gets a red outline), then with the server running:
+
+```
+swiftc -O tools/make-pdfs.swift -o /tmp/make-pdfs
+/tmp/make-pdfs "http://localhost:8642/docs/cv.html#pdf" files/Shilo-Preshyon-CV.pdf "http://localhost:8642/docs/bio.html#pdf" files/Shilo-Preshyon-Bio.pdf
+```
+
+Add `,full` after `#pdf` for application copies with the phone and Gmail from `docs/contact-private.js`
+(gitignored, so those details never go online). The site's copies show only the public email.

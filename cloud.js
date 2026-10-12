@@ -47,19 +47,21 @@ const Cloud = (() => {
     return w && h;
   }
 
-  // o: bg, ink | mode:'turbo', alpha, cy, zoom, tilt, size, spectral (0..1), sway, mosh
+  // o: bg, ink | mode:'turbo', alpha, cy, zoom, tilt, size, spectral (0..1), sway, mosh,
+  //    px (fixed pixels per CSS px: keeps the canvas size as set, for print)
   function draw(cv, t, o) {
-    if (!cv.getClientRects().length || !fit(cv)) return;
+    if (!cv.getClientRects().length || (!o.px && !fit(cv))) return;
+    const R = o.px || DPR;
     if (reduced) t *= .2;
     const ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
     const mosh = o.mosh && !reduced && performance.now() < moshUntil;
     ctx.globalAlpha = 1;
     if (mosh) {
       // Datamosh: drag blocks of the last frame along a smooth motion field and only faintly redraw.
-      const bs = Math.round(16 * DPR), n = Math.floor(W * H / (bs * bs) * .05);
+      const bs = Math.round(16 * R), n = Math.floor(W * H / (bs * bs) * .05);
       for (let k = 0; k < n; k++) {
         const bx = Math.floor(Math.random() * W / bs) * bs, by = Math.floor(Math.random() * H / bs) * bs;
-        const mx = Math.round(Math.sin(by * .004 + t * 1.3) * 7 * DPR), my = Math.round(Math.cos(bx * .005 + t) * 3 * DPR);
+        const mx = Math.round(Math.sin(by * .004 + t * 1.3) * 7 * R), my = Math.round(Math.cos(bx * .005 + t) * 3 * R);
         ctx.drawImage(cv, bx, by, bs, bs, bx + mx, by + my, bs, bs);
       }
       ctx.globalAlpha = .05; ctx.fillStyle = o.bg; ctx.fillRect(0, 0, W, H);
@@ -69,7 +71,7 @@ const Cloud = (() => {
     const tilt = o.tilt ?? .45, ct = Math.cos(tilt), st = Math.sin(tilt), D = 2.7;
     const F = Math.min(W * 1.15, H * 2.4) * (o.zoom || 1), cy = H * (o.cy || .58);
     const spec = o.spectral || 0, amp = .11 + .04 * Math.sin(t * .4);
-    const aS = (o.alpha || 1) * (mosh ? .45 : 1), sz = Math.max(1, 1.1 * DPR * (o.size || 1));
+    const aS = (o.alpha || 1) * (mosh ? .45 : 1), sz = Math.max(1, 1.1 * R * (o.size || 1));
     const turboMode = o.mode === 'turbo';
     if (!turboMode) ctx.fillStyle = o.ink;
     for (let j = 0; j < NZ; j++) {
