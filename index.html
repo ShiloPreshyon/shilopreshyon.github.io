@@ -101,6 +101,21 @@
     <div class="status"><div id="listCount"></div><div id="listMsg"></div></div>
   </div>
 
+  <div class="win hide" id="w-coll" data-title="Collage">
+    <div class="tb"><span>Collage</span><button data-close aria-label="Close">✕</button></div>
+    <div class="toolbar">
+      <button class="btn98" id="collPlay">▶ Play</button>
+      <button class="btn98" id="collStop">■ Stop</button>
+      <button class="btn98" id="collBounce" title="Save 30 seconds of the collage as a WAV file">⤓ Bounce 30 s</button>
+      <button class="btn98" id="collShare">Copy share link</button>
+      <button class="btn98" id="collClear">Clear</button>
+    </div>
+    <div class="inset list short">
+      <table class="coll"><thead><tr><th>#</th><th>Sound</th><th>Volume</th><th>Pan</th><th>Pitch</th><th></th></tr></thead><tbody id="collRows"></tbody></table>
+    </div>
+    <div class="status"><div id="collCount"></div><div id="collMsg"></div></div>
+  </div>
+
   <div class="win hide" id="w-mail" data-title="Contact">
     <div class="tb"><span>Contact</span><button data-close aria-label="Close">✕</button></div>
     <div class="dlg"><span class="dlg-ico" data-ico="mail"></span>

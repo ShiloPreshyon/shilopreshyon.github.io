@@ -12,6 +12,7 @@ const ICO = {
   doc: '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M3 1.5h7l3 3v10H3z" fill="#fff" stroke="#000"/><path d="M5 6.5h6M5 8.5h6M5 10.5h6M5 12.5h4" stroke="#000"/></svg>',
   mail: '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="1.5" y="3.5" width="13" height="9" fill="#fff" stroke="#000"/><path d="M1.5 3.5l6.5 5.5 6.5-5.5" fill="none" stroke="#000"/></svg>',
   pdf: '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M3 1.5h7l3 3v10H3z" fill="#fff" stroke="#000"/><path d="M10 1.5v3h3" fill="none" stroke="#000"/><rect x="4" y="9" width="8" height="4" fill="#1d3a52"/><path d="M5 6.5h5" stroke="#000"/></svg>',
+  layers: '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="1.5" y="1.5" width="9" height="7" fill="#fff" stroke="#000"/><rect x="3.5" y="4.5" width="9" height="7" fill="#dbe8f0" stroke="#000"/><rect x="5.5" y="7.5" width="9" height="7" fill="#1d3a52" stroke="#000"/></svg>',
   list: '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="1.5" y="1.5" width="13" height="13" fill="#fff" stroke="#000"/><path d="M4 5h1M4 8h1M4 11h1M7 5h5M7 8h5M7 11h5" stroke="#1d3a52"/></svg>',
   wav: '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M3 1.5h7l3 3v10H3z" fill="#fff" stroke="#000"/><path d="M5 9v1M7 7v5M9 8v3M11 6v6" stroke="#1d3a52"/></svg>',
   moon: '<svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" fill="#000" stroke="#7fd0ff"/><path d="M9.5 3.5a4.5 4.5 0 1 0 3 7.5a3.6 3.6 0 1 1-3-7.5z" fill="#dbe8f0"/><path d="M3 13h10" stroke="#7fd0ff" stroke-dasharray="1 1"/></svg>',
@@ -48,6 +49,7 @@ async function select(coll, idx, autoplay = true, lpos = null) {
   ctx().resume();
   stopSrc();
   if (coll !== P.coll) P.loop = coll.loop !== false; // loops repeat by default, Studio tracks play through
+  if (C.playing) collageStop();
   Object.assign(P, { coll, idx, lpos, offset: 0, playing: false, loading: true, error: false, buffer: null });
   if (moshPref) Cloud.mosh(3000);
   if (lpos === null) setHash(`#/work/${coll.id}/${coll.items[idx].id}`);
@@ -63,6 +65,7 @@ async function select(coll, idx, autoplay = true, lpos = null) {
 }
 function start(off) {
   const ac = ctx(); ac.resume();
+  if (C.playing) collageStop();
   stopSrc();
   const s = ac.createBufferSource();
   const d = P.buffer.duration, inList = P.lpos !== null;
@@ -191,6 +194,156 @@ $('listShare').onclick = async () => {
   renderList();
 };
 
+/* ---------------- collage ---------------- */
+// Up to four sounds layered at once. Each loops on its own clock, so layers drift in and out of phase.
+// Per layer: source -> gain -> pan -> collage bus -> output (and the analyser, for the picture).
+const MAX_LAYERS = 4;
+let CL = { layers: [] }; // layers: {u, c: collection id, i: item id, vol, pan, semi, mute}
+try { const v = JSON.parse(localStorage.getItem('collage')); if (v && Array.isArray(v.layers)) CL = v; } catch (e) {}
+CL.layers = CL.layers.filter(resolve).slice(0, MAX_LAYERS);
+const saveCollage = () => { try { localStorage.setItem('collage', JSON.stringify(CL)); } catch (e) {} };
+const C = { playing: false, bus: null, nodes: new Map(), gen: 0 };
+let collMsg = '';
+const layerBuf = L => { const r = resolve(L); return getBuf(r.coll.items[r.idx], r.coll); };
+
+function layerGraph(ac, out, L, buf, when) {
+  const src = ac.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  src.playbackRate.value = Math.pow(2, L.semi / 12);
+  const g = ac.createGain(); g.gain.value = L.mute ? 0 : L.vol;
+  const p = ac.createStereoPanner(); p.pan.value = L.pan;
+  src.connect(g); g.connect(p); p.connect(out);
+  src.start(when);
+  return { src, g, p };
+}
+async function collagePlay() {
+  if (!CL.layers.length) return;
+  const ac = ctx(); ac.resume();
+  stop(); P.lpos = null; // one thing at a time: the collage takes over from the player
+  collageStop();
+  const g = ++C.gen;
+  collMsg = 'Loading…'; renderCollage();
+  let bufs;
+  try { bufs = await Promise.all(CL.layers.map(layerBuf)); }
+  catch (e) { if (g === C.gen) { collMsg = 'Could not load a sound'; renderCollage(); } return; }
+  if (g !== C.gen) return;
+  C.bus = ac.createGain(); C.bus.connect(ac.destination); C.bus.connect(P.an);
+  const t0 = ac.currentTime + .05; // all layers start together
+  CL.layers.forEach((L, n) => C.nodes.set(L.u, layerGraph(ac, C.bus, L, bufs[n], t0)));
+  C.playing = true; collMsg = '';
+  if (moshPref) Cloud.mosh(3000);
+  renderCollage();
+}
+function collageStop() {
+  C.gen++;
+  C.nodes.forEach(n => { try { n.src.stop(); } catch (e) {} });
+  C.nodes.clear();
+  if (C.bus) { C.bus.disconnect(); C.bus = null; }
+  if (C.playing) { C.playing = false; renderCollage(); }
+}
+async function addLayer(coll, idx) {
+  openWin('w-coll');
+  if (CL.layers.length >= MAX_LAYERS) { collMsg = `Full: remove a layer first (${MAX_LAYERS} max)`; renderCollage(); return; }
+  const L = { u: (uid++).toString(36), c: coll.id, i: coll.items[idx].id, vol: .8, pan: 0, semi: 0, mute: false };
+  CL.layers.push(L); saveCollage();
+  collMsg = `Added ${coll.items[idx].title}`;
+  renderCollage();
+  if (C.playing) { // join the running collage straight away
+    const g = C.gen, buf = await layerBuf(L);
+    if (C.playing && g === C.gen && CL.layers.includes(L)) C.nodes.set(L.u, layerGraph(P.ac, C.bus, L, buf, P.ac.currentTime));
+  }
+}
+function removeLayer(u) {
+  const n = C.nodes.get(u);
+  if (n) { try { n.src.stop(); } catch (e) {} C.nodes.delete(u); }
+  CL.layers = CL.layers.filter(L => L.u !== u); saveCollage(); collMsg = '';
+  if (!CL.layers.length) collageStop();
+  renderCollage();
+}
+function setLayer(L, k, v) {
+  L[k] = v; saveCollage();
+  const n = C.nodes.get(L.u); if (!n) return;
+  const t = P.ac.currentTime; // short glides, so moving a control never clicks
+  if (k === 'vol' || k === 'mute') n.g.gain.setTargetAtTime(L.mute ? 0 : L.vol, t, .02);
+  if (k === 'pan') n.p.pan.setTargetAtTime(L.pan, t, .02);
+  if (k === 'semi') n.src.playbackRate.setTargetAtTime(Math.pow(2, L.semi / 12), t, .02);
+}
+// Bounce: render the collage offline to a 24-bit / 48 kHz WAV the visitor can keep.
+function wav24(b) {
+  const ch = [b.getChannelData(0), b.getChannelData(1)], n = b.length;
+  let peak = 0;
+  for (const c of ch) for (let k = 0; k < n; k++) { const a = Math.abs(c[k]); if (a > peak) peak = a; }
+  const g = peak > .999 ? .999 / peak : 1; // never clips: the whole bounce is turned down instead
+  const bytes = n * 6, v = new DataView(new ArrayBuffer(44 + bytes));
+  const str = (o, t) => { for (let k = 0; k < t.length; k++) v.setUint8(o + k, t.charCodeAt(k)); };
+  str(0, 'RIFF'); v.setUint32(4, 36 + bytes, true); str(8, 'WAVE'); str(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 2, true); v.setUint32(24, b.sampleRate, true);
+  v.setUint32(28, b.sampleRate * 6, true); v.setUint16(32, 6, true); v.setUint16(34, 24, true);
+  str(36, 'data'); v.setUint32(40, bytes, true);
+  let o = 44;
+  for (let k = 0; k < n; k++) for (const c of ch) {
+    const x = Math.round(Math.max(-1, Math.min(1, c[k] * g)) * 8388607);
+    v.setUint8(o, x & 255); v.setUint8(o + 1, (x >> 8) & 255); v.setUint8(o + 2, (x >> 16) & 255); o += 3;
+  }
+  return new Blob([v], { type: 'audio/wav' });
+}
+async function collageBounce(seconds = 30) {
+  if (!CL.layers.length) return;
+  collMsg = 'Bouncing…'; renderCollage();
+  try {
+    const bufs = await Promise.all(CL.layers.map(layerBuf));
+    const sr = 48000, off = new OfflineAudioContext(2, sr * seconds, sr);
+    CL.layers.forEach((L, n) => layerGraph(off, off.destination, L, bufs[n], 0));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(wav24(await off.startRendering()));
+    a.download = 'Shilo Preshyon - collage.wav';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    collMsg = `Saved ${seconds} s as WAV`;
+  } catch (e) { collMsg = 'Bounce failed'; }
+  renderCollage();
+}
+function renderCollage() {
+  const rows = $('collRows'); rows.innerHTML = '';
+  CL.layers.forEach((L, n) => {
+    const r = resolve(L), it = r.coll.items[r.idx];
+    const tr = document.createElement('tr');
+    const semis = Array.from({ length: 25 }, (_, k) => k - 12).map(s => `<option value="${s}">${s > 0 ? '+' : ''}${s}</option>`).join('');
+    tr.innerHTML = `<td class="num">${n + 1}</td><td class="name">${ICO.wav}<span></span></td>` +
+      `<td><input type="range" min="0" max="1" step="0.01" aria-label="Volume"></td>` +
+      `<td><input type="range" min="-1" max="1" step="0.05" aria-label="Pan"></td>` +
+      `<td><select aria-label="Pitch in semitones">${semis}</select></td>` +
+      `<td class="ctl"><button class="mini" title="Mute">M</button><button class="mini" title="Remove">✕</button></td>`;
+    tr.querySelector('span').textContent = it.title;
+    const [vol, pan] = tr.querySelectorAll('input'), semi = tr.querySelector('select'), [mute, rm] = tr.querySelectorAll('button');
+    vol.value = L.vol; pan.value = L.pan; semi.value = String(L.semi);
+    vol.oninput = () => setLayer(L, 'vol', +vol.value);
+    pan.oninput = () => setLayer(L, 'pan', +pan.value);
+    pan.ondblclick = () => { pan.value = 0; setLayer(L, 'pan', 0); };
+    semi.onchange = () => setLayer(L, 'semi', +semi.value);
+    mute.classList.toggle('on', L.mute);
+    mute.onclick = () => { setLayer(L, 'mute', !L.mute); mute.classList.toggle('on', L.mute); };
+    rm.onclick = () => removeLayer(L.u);
+    rows.appendChild(tr);
+  });
+  if (!CL.layers.length) rows.innerHTML = `<tr><td colspan="6" class="empty">Empty. Press ⧉ next to any sound in the Work window to layer it here. Up to ${MAX_LAYERS} play at once, each looping on its own clock.</td></tr>`;
+  $('collCount').textContent = `${CL.layers.length} of ${MAX_LAYERS} layers`;
+  $('collMsg').textContent = collMsg || (C.playing ? 'Playing: layers drift in and out of phase' : '');
+  $('collPlay').disabled = !CL.layers.length || C.playing;
+  $('collStop').disabled = !C.playing;
+  $('collShare').disabled = $('collBounce').disabled = $('collClear').disabled = !CL.layers.length;
+  ui();
+}
+$('collPlay').onclick = collagePlay;
+$('collStop').onclick = collageStop;
+$('collBounce').onclick = () => collageBounce(30);
+$('collClear').onclick = () => { collageStop(); CL.layers = []; saveCollage(); collMsg = ''; renderCollage(); };
+$('collShare').onclick = async () => {
+  const url = `${location.origin}${location.pathname}#/collage/` + CL.layers.map(L => [L.c, L.i, L.vol, L.pan, L.semi, L.mute ? 1 : 0].join('~')).join(',');
+  try { await navigator.clipboard.writeText(url); collMsg = 'Link copied'; } catch (e) { prompt('Copy this link:', url); collMsg = ''; }
+  renderCollage();
+};
+
 /* ---------------- windows ---------------- */
 let zTop = 10;
 function focusWin(w) {
@@ -220,6 +373,7 @@ function placeWindows() {
   set('w-doc', 140, 14, Math.min(720, W - 160));
   const lw = Math.min(440, W - 140);
   set('w-list', Math.max(112, W - lw - 24), 28, lw);
+  set('w-coll', 140, 60, Math.min(620, W - 160));
 }
 document.querySelectorAll('.win').forEach(w => {
   w.addEventListener('pointerdown', () => focusWin(w));
@@ -258,7 +412,7 @@ function openDir(id) {
   renderDir();
   if (!P.coll || !dirPath || P.coll.id !== dirPath) setHash(dirPath ? `#/work/${dirPath}` : '#/work');
 }
-function row(icon, cells, onClick, sel, onAdd) {
+function row(icon, cells, onClick, sel, onAdd, onLayer) {
   const tr = document.createElement('tr');
   tr.innerHTML = `<td class="name">${ICO[icon]}<span></span></td>` + cells.slice(1).map(() => '<td></td>').join('');
   tr.querySelector('span').textContent = cells[0];
@@ -271,6 +425,12 @@ function row(icon, cells, onClick, sel, onAdd) {
     const b = document.createElement('button');
     b.className = 'mini'; b.textContent = '+'; b.title = 'Add to playlist';
     b.onclick = e => { e.stopPropagation(); onAdd(); };
+    add.appendChild(b);
+  }
+  if (onLayer) {
+    const b = document.createElement('button');
+    b.className = 'mini'; b.textContent = '⧉'; b.title = 'Add to collage';
+    b.onclick = e => { e.stopPropagation(); onLayer(); };
     add.appendChild(b);
   }
   tr.appendChild(add);
@@ -292,11 +452,12 @@ function renderDir() {
   $('dirTitle').textContent = `${c.title} — ${c.sub}`;
   $('dirAddr').textContent = `C:\\Work\\${c.title} — ${c.sub}`;
   const studio = c.kind === 'studio';
-  $('dirHead').innerHTML = studio ? '<th>Name</th><th>Artist</th><th>Role</th><th>Year</th><th>Length</th><th title="Add to playlist">+</th>'
-    : '<th>Name</th><th>Date</th><th>Length</th><th>Type</th><th title="Add to playlist">+</th>';
+  const addTh = '<th title="+ add to playlist · ⧉ add to collage">+ ⧉</th>';
+  $('dirHead').innerHTML = studio ? `<th>Name</th><th>Artist</th><th>Role</th><th>Year</th><th>Length</th>${addTh}`
+    : `<th>Name</th><th>Date</th><th>Length</th><th>Type</th>${addTh}`;
   c.items.forEach((it, i) => rows.appendChild(row('wav', studio ? [it.title, it.artist, it.role, it.year, fmt(it.len)] : [it.title, it.date, fmt(it.len), 'FLAC audio'], () => {
     openWin('w-play'); select(c, i);
-  }, P.coll === c && P.idx === i, () => addToList(c, i))));
+  }, P.coll === c && P.idx === i, () => addToList(c, i), () => addLayer(c, i))));
   rows.appendChild(row('moon', [`${c.title} — Night Water`, '', '', ...(studio ? ['', ''] : ['Portal'])], () => openPortal(c)));
   $('dirCount').textContent = `${c.items.length + 1} object(s)`;
   $('dirNote').textContent = c.note;
@@ -311,11 +472,12 @@ const launch = {
   contact: () => { openWin('w-mail'); setHash('#/contact'); },
   portal: () => openPortal(P.coll || latest),
   playlist: () => { openWin('w-list'); renderList(); setHash('#/playlist'); },
+  collage: () => { openWin('w-coll'); renderCollage(); setHash('#/collage'); },
   cv: () => openDoc('cv'),
   bio: () => openDoc('bio'),
 };
 const icons = [['Work', 'cd', 'work'], ['Readme.txt', 'doc', 'about'], ['CV.pdf', 'pdf', 'cv'], ['Bio.pdf', 'pdf', 'bio'],
-  ['Playlist', 'list', 'playlist'],
+  ['Playlist', 'list', 'playlist'], ['Collage', 'layers', 'collage'],
   ['Contact', 'mail', 'contact'], ['Night Water', 'moon', 'portal']];
 icons.forEach(([n, ic, k]) => {
   const d = document.createElement('button');
@@ -367,7 +529,7 @@ function ui() {
   const it = P.coll && P.coll.items[P.idx];
   const inList = P.lpos !== null ? ` (playlist ${P.lpos + 1}/${PL.entries.length})` : '';
   $('playTitle').textContent = it ? `Now Playing — ${it.title}${inList}` : 'Now Playing';
-  $('screenLbl').textContent = !it ? 'NO SIGNAL' : P.error ? 'READ ERROR' : P.loading ? `LOADING ▸ ${it.title.toUpperCase()}` :
+  $('screenLbl').textContent = C.playing ? `COLLAGE ▸ ${C.nodes.size} LAYER${C.nodes.size === 1 ? '' : 'S'}` : !it ? 'NO SIGNAL' : P.error ? 'READ ERROR' : P.loading ? `LOADING ▸ ${it.title.toUpperCase()}` :
     `CH1 ▸ ${it.title.toUpperCase()}${P.playing ? '' : '  ❚❚'}`;
   $('bPlay').textContent = P.playing ? '❚❚' : '▶';
   $('cLoop').checked = P.loop;
@@ -431,6 +593,17 @@ function route() {
   if (p[0] === 'readme' || p[0] === 'about') launch.about();
   else if (p[0] === 'contact') launch.contact();
   else if (S.docs[p[0]]) openDoc(p[0]);
+  else if (p[0] === 'collage') {
+    if (p[1]) {
+      const layers = p[1].split(',').map(x => {
+        const [c, i, vol, pan, semi, mute] = decodeURIComponent(x).split('~');
+        const n = (v, lo, hi, d) => Number.isFinite(+v) ? Math.max(lo, Math.min(hi, +v)) : d;
+        return { u: (uid++).toString(36), c, i, vol: n(vol, 0, 1, .8), pan: n(pan, -1, 1, 0), semi: Math.round(n(semi, -12, 12, 0)), mute: mute === '1' };
+      }).filter(resolve).slice(0, MAX_LAYERS);
+      if (layers.length) { collageStop(); CL = { layers }; saveCollage(); collMsg = 'Shared collage loaded: press Play'; }
+    }
+    launch.collage();
+  }
   else if (p[0] === 'playlist') {
     // a shared playlist replaces this visitor's own (theirs is a click away from being rebuilt anyway)
     if (p[2]) {
@@ -452,7 +625,7 @@ function route() {
 const wall = $('wall'), screen = $('screen'), pcv = $('pcv');
 function frame(now) {
   const t = now / 1000;
-  Cloud.feed(P.playing ? P.an : null);
+  Cloud.feed(P.playing || C.playing ? P.an : null);
   if (!portalColl) {
     Cloud.draw(wall, t * .6, { bg: '#05070a', mode: 'turbo', alpha: .8, cy: .62, zoom: 1.05, tilt: .5, spectral: .4 });
     Cloud.draw(screen, t, { bg: '#000', mode: 'turbo', mosh: true, cy: .64, zoom: 1.15, tilt: .5, size: .9, spectral: 1, sway: .3 });
@@ -478,5 +651,5 @@ try { seen = !!localStorage.getItem('seen'); localStorage.setItem('seen', '1'); 
 if (location.hash.length > 2) route();
 else { if (!seen) openWin('w-about'); openDir(latest.id); }
 addEventListener('hashchange', route);
-renderList(); ui(); tick(); setInterval(tick, 10000);
+renderList(); renderCollage(); ui(); tick(); setInterval(tick, 10000);
 requestAnimationFrame(frame);

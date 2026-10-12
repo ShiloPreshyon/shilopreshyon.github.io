@@ -81,6 +81,12 @@ td.empty { color: var(--lo); white-space: normal; padding: 10px; }
 .reps { margin-left: auto; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 .reps select { font: 11px var(--ui); }
 .task.flash { background: var(--sel); color: #fff; }
+td.add { width: 44px; white-space: nowrap; }
+td.add .mini + .mini { margin-left: 2px; }
+.mini.on { border-color: var(--dk) var(--hi) var(--hi) var(--dk); background: #d6d6d6; font-weight: bold; }
+table.coll input[type=range] { width: 84px; vertical-align: middle; accent-color: var(--sel); }
+table.coll select { font: 11px var(--ui); }
+.toolbar { flex-wrap: wrap; }
 
 /* document viewer */
 .toolbar a.btn98 { text-decoration: none; display: inline-block; }

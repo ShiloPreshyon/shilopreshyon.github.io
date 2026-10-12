@@ -17,6 +17,12 @@ The + button next to any loop adds it to the visitor's Playlist window. Each loo
 then the next one starts. It's saved only in their browser; "Copy share link" makes a link like
 `#/playlist/<repeats>/<collection>~<item>,…` that loads the same playlist anywhere.
 
+## Collage
+
+⧉ next to any sound adds it as a layer in the Collage window (up to 4). Layers loop on their own clocks, each with
+volume, pan and pitch (±12 semitones). Bounce renders 30 s offline to a 24-bit / 48 kHz WAV, turned down rather
+than clipped if the layers sum over full scale. Share links: `#/collage/<collection>~<item>~<vol>~<pan>~<semi>~<mute>,…`.
+
 ## Adding a collection
 
 1. `tools/encode.sh audio/<collection-id> /path/to/*.wav` — lossless FLAC, same bit depth and rate.

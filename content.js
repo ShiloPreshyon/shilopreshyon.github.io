@@ -17,6 +17,7 @@ WHAT'S HERE
 Work          collections of sound, a folder each
 Studio        productions and mixes (inside Work)
 Playlist      your own sequence of loops
+Collage       layer up to four sounds at once
 Night Water   a dark, full-screen listening room
 CV.pdf        for applications and paperwork
 Bio.pdf       the short version
@@ -29,6 +30,7 @@ HOW TO LISTEN
 · ↑ ↓ arrow keys move through the files, playing each one as you go. ← → move within a sound.
 · Space bar plays and pauses. ⏮ ⏭ step through the folder. Click the progress bar to move within a sound.
 · Press + beside a loop to add it to your Playlist. Choose how many times each one repeats, then Play all. "Copy share link" sends your arrangement to someone else.
+· Press ⧉ beside any sound to layer it in the Collage window. Up to four play at once, each looping on its own clock, so they drift in and out of phase. Set each layer's volume, pan and pitch; Bounce saves 30 seconds of it as a WAV.
 · Open a .portal file, or the Night Water icon, to hear a collection in the dark. Esc brings you back.
 · Windows can be dragged around and closed. The taskbar brings them back.
 · Headphones or good speakers are best.
@@ -50,7 +52,7 @@ CONTACT
 
 {email}
 
-No ads, no analytics, no accounts. Your playlist is kept only in your own browser.`,
+No ads, no analytics, no accounts. Your playlist and collage are kept only in your own browser.`,
 
 
   // PDFs made from docs/*.html with tools/make-pdfs.swift; the viewer window shows the HTML page.
