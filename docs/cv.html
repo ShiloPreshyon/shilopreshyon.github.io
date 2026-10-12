@@ -41,6 +41,10 @@
       <div class="tb"><span>Awards (Selected)</span><small id="nAw"></small></div>
       <table><thead><tr><th>Year</th><th>Funder</th><th>Program</th><th style="text-align:right">Amount</th><th>Awarded to</th></tr></thead><tbody id="aw"></tbody></table>
     </section>
+    <section>
+      <div class="tb"><span>Funded Mentorships</span><small id="nMen"></small></div>
+      <table><thead><tr><th>Year</th><th>Funder</th><th>Program</th><th>Recipient</th><th>Role</th></tr></thead><tbody id="men"></tbody></table>
+    </section>
     <div class="win notepad">
       <div class="tb"><span>Biography.txt — Notepad</span></div>
       <div class="menu"><span><u>F</u>ile</span><span><u>E</u>dit</span><span><u>S</u>earch</span></div>
@@ -81,6 +85,11 @@ const DEV = [
   ['Wolf Parade', 'Assistant Audio Engineer & Recording Internship', '2018'],
   ['Vancouver Community College', 'Composition & Bass Major', '2012–2014'],
 ];
+// Grants other artists received that paid Shilo as mentor (amounts were theirs, so not listed)
+const MENTOR = [
+  ['2024', 'Canada Council for the Arts', 'Professional Development', 'Ryan Haché', 'Paid mentor'],
+  ['2024', 'Canada Council for the Arts', 'Professional Development', 'Sofia Miller', 'Paid mentor'],
+];
 const PROJ = [
   ['a small sounder', 'Stz’uminus/Yellow Point, BC', '2024–present', 'Co-Founder, Musician, Composer'],
   ['You’re Listening To Clam Lombardi', 'Nanaimo, BC', '2024', 'Co-Founder, Live Performer, Musician'],
@@ -96,8 +105,7 @@ const AW = [
   ['2026', 'Creative BC', 'Demo Recording Grant – Shilo Preshyon', '$2,000', 'Ritchie Hemphill & Shilo Preshyon'],
   ['2025', 'Creative BC', 'Demo Recording Grant – Myles Dunne', '$2,000', 'Shilo Preshyon'],
   ['2025', 'Creative BC', 'Demo Recording Grant – Broken Egg', '$2,000', 'Shilo Preshyon'],
-  ['2024', 'Canada Council for the Arts', 'Professional Development', '$10,000', 'Shilo Preshyon & Ryan Haché'],
-  ['2024', 'Canada Council for the Arts', 'Research and Creation', '$25,000', 'Shilo Preshyon & Ryan Haché'],
+  ['2024', 'Canada Council for the Arts', 'Research and Creation', '$25,000', 'Ryan Haché & Shilo Preshyon (duo project; Ryan Haché as applicant)'],
   ['2024', 'Creative BC', 'Demo Recording Grant – Louis Belcourt', '$2,000', 'Shilo Preshyon'],
   ['2024', 'Creative BC', 'Demo Recording Grant – Nell Jedrzejczyk', '$2,000', 'Shilo Preshyon'],
   ['2021', 'Canada Council for the Arts', 'Digital Now Project Grant', '$100,000', 'Ba’as (Shilo Preshyon & Ritchie Hemphill)'],
@@ -207,6 +215,8 @@ rows('aw', AW, ([y, f, p, a, t]) => `<tr><td class="yr">${y}</td><td><b>${esc(f)
 document.getElementById('nDev').textContent = `${DEV.length} object(s)`;
 document.getElementById('nProj').textContent = `${PROJ.length} object(s)`;
 document.getElementById('nAw').textContent = `${AW.length} object(s)`;
+rows('men', MENTOR, ([y, f, p, r, role]) => `<tr><td class="yr">${y}</td><td><b>${esc(f)}</b></td><td>${esc(p)}</td><td>${esc(r)}</td><td>${esc(role)}</td></tr>`);
+document.getElementById('nMen').textContent = `${MENTOR.length} object(s)`;
 
 // Engineering credits: a role matrix split into two Explorer-style tables of equal height.
 const flat = [];

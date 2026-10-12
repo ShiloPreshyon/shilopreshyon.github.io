@@ -71,8 +71,8 @@ tr.folder svg { width: 12px; height: 12px; vertical-align: -2px; margin-right: 5
 /* notepad window for running text */
 .notepad .menu { display: flex; gap: 12px; padding: 2px 6px 3px; font: 11px var(--ui); }
 .notepad .menu u { text-decoration: underline; }
-.notepad .text { background: #fff; padding: 16px 18px 8px; font: 12.5px/1.68 var(--sans); }
-.notepad .text p { margin: 0 0 13px; }
+.notepad .text { background: #fff; padding: 12px 18px 4px; font: 12.5px/1.68 var(--sans); }
+.notepad .text p { margin: 0 0 10px; }
 
 /* status bar footer */
 .status { position: absolute; left: 52px; right: 52px; bottom: 22px; display: flex; gap: 2px; font: 10px var(--ui); color: #222;

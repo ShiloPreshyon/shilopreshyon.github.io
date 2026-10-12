@@ -43,7 +43,10 @@ final class Runner: NSObject, WKNavigationDelegate {
         if !state.isEmpty { break }
         try? await Task.sleep(nanoseconds: 100_000_000)
       }
-      guard state == "ok" else { print("✗ \(jobs[i].0): \(state.isEmpty ? "never ready" : "content overflows a page")"); exit(1) }
+      guard state == "ok" else {
+        let which = (try? await w.evaluateJavaScript("[...document.querySelectorAll('.page')].map((p,i)=>p.classList.contains('overflow')?`page ${i+1} by ${(f=>f.scrollHeight-f.clientHeight)(p.querySelector('.flow'))}px`:'').filter(Boolean).join(', ')") as? String) ?? ""
+        print("✗ \(jobs[i].0): \(state.isEmpty ? "never ready" : "content overflows: \(which)")"); exit(1)
+      }
       let n = (try? await w.evaluateJavaScript("document.querySelectorAll('.page').length") as? Int) ?? 0
       w.frame = NSRect(x: 0, y: 0, width: W, height: H * CGFloat(n))
       try? await Task.sleep(nanoseconds: 300_000_000)
