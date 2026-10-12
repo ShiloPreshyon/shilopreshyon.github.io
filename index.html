@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shilo Preshyon</title>
+<meta name="description" content="Shilo Preshyon: sound, image, research. Small Loops from residencies in 2026.">
+<meta property="og:title" content="Shilo Preshyon">
+<meta property="og:description" content="sound · image · research">
+<meta name="theme-color" content="#05070a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Plain version for screen readers, search engines and no-JS visitors. -->
+<main class="plain">
+  <h1>Shilo Preshyon</h1>
+  <p>sound · image · research</p>
+  <h2>Work</h2>
+  <p>Small Loops — Residencies, 2026 (nine audio loops)</p>
+  <h2>Contact</h2>
+  <p><a href="mailto:hello@shilopreshyon.com">hello@shilopreshyon.com</a></p>
+</main>
+
+<div id="desk" aria-hidden="false">
+  <canvas class="wall" id="wall"></canvas>
+  <div class="icons" id="icons"></div>
+
+  <div class="win hide" id="w-dir" data-title="Work">
+    <div class="tb"><span id="dirTitle">Work</span><button data-close aria-label="Close">✕</button></div>
+    <div class="menu"><span><u>F</u>ile</span><span><u>E</u>dit</span><span><u>V</u>iew</span><span><u>H</u>elp</span></div>
+    <div class="toolbar">
+      <button class="btn98" id="dirUp" title="Up one level">⇧ Up</button>
+      <div class="addr inset"><span>Address</span><b id="dirAddr">C:\Work</b></div>
+    </div>
+    <div class="inset list">
+      <table><thead><tr id="dirHead"></tr></thead><tbody id="dirRows"></tbody></table>
+    </div>
+    <div class="status"><div id="dirCount"></div><div id="dirNote"></div></div>
+  </div>
+
+  <div class="win hide" id="w-play" data-title="Now Playing">
+    <div class="tb"><span id="playTitle">Now Playing</span><button data-close aria-label="Close">✕</button></div>
+    <div class="screen inset"><canvas id="screen"></canvas><div class="lbl" id="screenLbl">NO SIGNAL</div></div>
+    <div class="transport">
+      <button class="btn98" id="bPrev" title="Previous" aria-label="Previous">⏮</button>
+      <button class="btn98" id="bPlay" title="Play / pause" aria-label="Play">▶</button>
+      <button class="btn98" id="bStop" title="Stop" aria-label="Stop">■</button>
+      <button class="btn98" id="bNext" title="Next" aria-label="Next">⏭</button>
+      <div class="prog inset" id="prog" title="Seek"><i id="progBar"></i></div>
+      <div class="time" id="time">0:00 / 0:00</div>
+    </div>
+    <div class="opts">
+      <label><input type="checkbox" id="cLoop" checked> Loop</label>
+      <label><input type="checkbox" id="cMosh" checked> Datamosh on track change</label>
+    </div>
+  </div>
+
+  <div class="win hide" id="w-about" data-title="About.txt">
+    <div class="tb"><span>About.txt — Notepad</span><button data-close aria-label="Close">✕</button></div>
+    <div class="menu"><span><u>F</u>ile</span><span><u>E</u>dit</span><span><u>S</u>earch</span></div>
+    <div class="inset txt" id="aboutTxt"></div>
+  </div>
+
+  <div class="win hide" id="w-mail" data-title="Contact">
+    <div class="tb"><span>Contact</span><button data-close aria-label="Close">✕</button></div>
+    <div class="dlg"><span class="dlg-ico" data-ico="mail"></span>
+      <div>Write to Shilo:<br><br><a id="mailLink" href="#"></a></div></div>
+    <div class="dlg-btns"><button class="btn98" data-close>OK</button></div>
+  </div>
+
+  <div class="startmenu hide" id="startMenu">
+    <div class="sm-side"><span>Shilo Preshyon</span></div>
+    <div class="sm-items" id="smItems"></div>
+  </div>
+
+  <div class="taskbar">
+    <button class="btn98 start" id="bStart">▽ Start</button>
+    <div class="tasks" id="tasks"></div>
+    <div class="clock inset" id="clock"></div>
+  </div>
+</div>
+
+<div id="portal" class="hide" role="dialog" aria-label="Night Water">
+  <canvas id="pcv"></canvas>
+  <div class="p-top">
+    <div><div class="p-name" id="pName"></div><div class="p-sub" id="pSub"></div></div>
+    <button id="pClose">✕ RETURN TO ARCHIVE</button>
+  </div>
+  <div class="p-foot">
+    <div class="p-readout" id="pReadout"></div>
+    <div class="p-list" id="pList"></div>
+  </div>
+</div>
+
+<script src="content.js"></script>
+<script src="cloud.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
