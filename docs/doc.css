@@ -16,6 +16,9 @@ html.pdf body { padding: 0; }
 .page { width: 816px; height: 1056px; margin: 0 auto 24px; background: #fff; position: relative; overflow: hidden;
   padding: 0 52px 56px; display: flex; flex-direction: column; }
 html.pdf .page { margin: 0; }
+html.embed { background: #808080; }
+html.embed body { padding: 8px 0 0; }
+html.embed .page { margin-bottom: 8px; box-shadow: 1px 1px 0 #404040, 2px 2px 0 #00000040; }
 .page.overflow { outline: 3px solid red; }
 .page > .flow { flex: 1; min-height: 0; overflow: hidden; }
 

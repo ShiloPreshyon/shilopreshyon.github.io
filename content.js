@@ -9,8 +9,11 @@ window.SITE = {
 
 Shilo operates Risqué Disque Studios in Yellow Point, a shared space with Fifthline Management and Headwater Music, where they work as engineer, producer, and mentor to emerging artists. Active collage and sound design projects include a small sounder, Bronfree Films, and Soup du Jour. Shilo has received funding from Canada Council for the Arts and Creative BC across multiple cycles.`,
 
-  // Made from docs/cv.html and docs/bio.html with tools/make-pdfs.swift
-  files: { cv: "files/Shilo-Preshyon-CV.pdf", bio: "files/Shilo-Preshyon-Bio.pdf" },
+  // PDFs made from docs/*.html with tools/make-pdfs.swift; the viewer window shows the HTML page.
+  docs: {
+    cv: { title: "CV.pdf", pdf: "files/Shilo-Preshyon-CV.pdf", page: "docs/cv.html", pages: 3 },
+    bio: { title: "Bio.pdf", pdf: "files/Shilo-Preshyon-Bio.pdf", page: "docs/bio.html", pages: 1 },
+  },
 
   collections: [
     {

@@ -125,6 +125,7 @@ function placeWindows() {
   set('w-play', Math.max(112, Math.min(112 + dw - 120, W - pw - 24)), Math.max(140, Math.min(352, H - 30 - 300)), pw);
   set('w-about', 150, 70, Math.min(440, W - 180));
   set('w-mail', 190, 130, 320);
+  set('w-doc', 140, 14, Math.min(720, W - 160));
 }
 document.querySelectorAll('.win').forEach(w => {
   w.addEventListener('pointerdown', () => focusWin(w));
@@ -204,8 +205,8 @@ const launch = {
   about: () => { openWin('w-about'); setHash('#/about'); },
   contact: () => { openWin('w-mail'); setHash('#/contact'); },
   portal: () => openPortal(P.coll || latest),
-  cv: () => open(S.files.cv, '_blank', 'noopener'),
-  bio: () => open(S.files.bio, '_blank', 'noopener'),
+  cv: () => openDoc('cv'),
+  bio: () => openDoc('bio'),
 };
 const icons = [['Work', 'cd', 'work'], ['About.txt', 'doc', 'about'], ['CV.pdf', 'pdf', 'cv'], ['Bio.pdf', 'pdf', 'bio'],
   ['Contact', 'mail', 'contact'], ['Night Water', 'moon', 'portal']];
@@ -226,6 +227,26 @@ document.addEventListener('pointerdown', e => {
 $('aboutTxt').textContent = `${S.name.toUpperCase()}\n${S.tagline}\n\n${S.about}\n\n— CV.pdf and Bio.pdf are on the desktop.`;
 $('mailLink').href = 'mailto:' + S.email; $('mailLink').textContent = S.email;
 document.querySelector('[data-ico=mail]').innerHTML = ICO.mail;
+
+/* ---------------- document viewer ---------------- */
+// CV and bio open in a window (the same page the PDF is made from, scaled to fit), with the PDF one click away.
+let docOpen = null;
+function openDoc(k) {
+  const d = S.docs[k];
+  if (docOpen !== k) {
+    $('docFrame').src = `${d.page}#embed`;
+    $('docTitle').textContent = `${d.title} — Viewer`;
+    $('w-doc').dataset.title = d.title;
+    $('docOpen').href = d.pdf;
+    $('docDl').href = d.pdf;
+    $('docDl').setAttribute('download', d.pdf.split('/').pop());
+    $('docName').textContent = d.title;
+    $('docPages').textContent = `${d.pages} page${d.pages > 1 ? 's' : ''}`;
+    docOpen = k;
+  }
+  openWin('w-doc');
+  setHash(`#/${k}`);
+}
 
 /* ---------------- player window ---------------- */
 $('bPlay').onclick = toggle; $('bStop').onclick = stop;
@@ -280,6 +301,7 @@ function route() {
   const p = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (p[0] === 'about') launch.about();
   else if (p[0] === 'contact') launch.contact();
+  else if (S.docs[p[0]]) openDoc(p[0]);
   else if (p[0] === 'portal' && findColl(p[1])) openPortal(findColl(p[1]));
   else if (p[0] === 'work') {
     openDir(p[1] || null);

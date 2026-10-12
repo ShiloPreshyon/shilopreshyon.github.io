@@ -26,7 +26,8 @@
   </div>
 </div>
 <script src="../cloud.js"></script>
-<script src="contact-private.js"></script>
+<!-- private contact file only exists locally; only asked for when making application copies -->
+<script>if (location.hash.includes('full')) document.write('<script src="contact-private.js"><\/script>');</script>
 <script src="doc.js"></script>
 <script>finish('Bio');</script>
 </body>

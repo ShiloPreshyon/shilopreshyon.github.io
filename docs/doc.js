@@ -5,6 +5,7 @@
 // so the phone number never ships with the site.
 const FLAGS = location.hash.slice(1).split(',');
 if (FLAGS.includes('pdf')) document.documentElement.classList.add('pdf');
+if (FLAGS.includes('embed')) document.documentElement.classList.add('embed');
 const CONTACT = FLAGS.includes('full') && window.PRIVATE_CONTACT ? window.PRIVATE_CONTACT : 'spsounddirectory@proton.me';
 
 const FOLDER = '<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M1 3.5h5l1.5 2H15v8H1z" fill="#e6e6e6" stroke="#000"/><path d="M1 6.5h14" stroke="#000"/></svg>';
@@ -30,5 +31,10 @@ async function finish(docName) {
   });
   // Flag any page whose content doesn't fit, so overflow is never silently clipped.
   pages.forEach(p => { const f = p.querySelector('.flow'); if (f && f.scrollHeight > f.clientHeight + 1) p.classList.add('overflow'); });
+  // In the site's viewer window, scale whole pages down to the window's width.
+  if (FLAGS.includes('embed')) {
+    const fitPages = () => { const z = Math.min(1, (innerWidth - 16) / 816); pages.forEach(p => p.style.zoom = z); };
+    fitPages(); addEventListener('resize', fitPages);
+  }
   document.body.dataset.ready = pages.filter(p => p.classList.contains('overflow')).length ? 'overflow' : 'ok';
 }
