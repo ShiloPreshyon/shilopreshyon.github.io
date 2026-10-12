@@ -33,6 +33,7 @@ swiftc -O tools/make-pdfs.swift -o /tmp/make-pdfs
 
 Add `,full` after `#pdf` for application copies with the phone and Gmail from `docs/contact-private.js`
 (gitignored, so those details never go online). The site's copies show only the public email.
+Add `,amounts` for a CV with grant dollar amounts (for business-side applications), e.g. `#pdf,full,amounts`.
 
 ## Publishing
 

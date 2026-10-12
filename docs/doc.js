@@ -1,5 +1,6 @@
 // Shared setup for the printable documents.
 // URL hash flags: "pdf" drops the on-screen page gaps (used by tools/make-pdfs),
+// "amounts" adds grant dollar amounts to the CV,
 // "full" swaps in the application contact details from contact-private.js, which is gitignored
 // so the phone number never ships with the site.
 const FLAGS = location.hash.slice(1).split(',');

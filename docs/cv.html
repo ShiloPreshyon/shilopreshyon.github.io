@@ -39,7 +39,7 @@
   <div class="flow">
     <section>
       <div class="tb"><span>Awards (Selected)</span><small id="nAw"></small></div>
-      <table class="grants"><colgroup><col style="width:44px"><col style="width:168px"><col style="width:236px"><col style="width:68px"><col></colgroup><thead><tr><th>Year</th><th>Funder</th><th>Program</th><th style="text-align:right">Amount</th><th>Awarded to</th></tr></thead><tbody id="aw"></tbody></table>
+      <table class="grants" id="awTable"></table>
     </section>
     <section>
       <div class="tb"><span>Funded Projects</span><small id="nMen"></small></div>
@@ -215,7 +215,12 @@ Cartoon Lizard|EP “Sentinels”|PE`],
 const rows = (el, data, fmt) => { document.getElementById(el).innerHTML = data.map(fmt).join(''); };
 rows('dev', DEV, ([a, b, c]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td><td class="yr">${esc(c)}</td></tr>`);
 rows('proj', PROJ, ([a, b, c, d]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td><td class="yr">${esc(c)}</td><td>${esc(d)}</td></tr>`);
-rows('aw', AW, ([y, f, p, a, t]) => `<tr><td class="yr">${y}</td><td><b>${esc(f)}</b></td><td>${esc(p)}</td><td class="amt">${a || '—'}</td><td>${esc(t)}</td></tr>`);
+// Dollar amounts only with the "amounts" flag (business-side applications); arts CVs leave them out.
+const AMOUNTS = FLAGS.includes('amounts');
+document.getElementById('awTable').innerHTML =
+  `<colgroup><col style="width:44px"><col style="width:168px"><col style="width:236px">${AMOUNTS ? '<col style="width:68px">' : ''}<col></colgroup>` +
+  `<thead><tr><th>Year</th><th>Funder</th><th>Program</th>${AMOUNTS ? '<th style="text-align:right">Amount</th>' : ''}<th>Awarded to</th></tr></thead><tbody id="aw"></tbody>`;
+rows('aw', AW, ([y, f, p, a, t]) => `<tr><td class="yr">${y}</td><td><b>${esc(f)}</b></td><td>${esc(p)}</td>${AMOUNTS ? `<td class="amt">${a || '—'}</td>` : ''}<td>${esc(t)}</td></tr>`);
 document.getElementById('nDev').textContent = `${DEV.length} object(s)`;
 document.getElementById('nProj').textContent = `${PROJ.length} object(s)`;
 document.getElementById('nAw').textContent = `${AW.length} object(s)`;
