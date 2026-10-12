@@ -16,9 +16,9 @@ Shilo operates Risqué Disque Studios in Yellow Point, a shared space with Fifth
     {
       id: "small-loops-2026",
       title: "Small Loops",
-      sub: "Residencies, 2026",
+      sub: "LĒNA Residency · JOYA: AiR, 2026",
       year: 2026,
-      note: "Small loops from residencies in 2026.",
+      note: "Small loops from LĒNA Residency (Galiano Island, June 10–12) and JOYA: AiR (Andalucía, June 19), 2026.",
       loop: true,
       items: [
         { id: "june-10-2026-1", title: "June 10 2026 #1", date: "2026-06-10", len: 10.99 },

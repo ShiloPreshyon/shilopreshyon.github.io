@@ -251,7 +251,7 @@ let portalColl = null;
 function openPortal(c) {
   portalColl = c;
   $('pName').textContent = c.title.toUpperCase();
-  $('pSub').textContent = `${S.name.toLowerCase()} · ${c.sub.toLowerCase()}`;
+  $('pSub').textContent = `${S.name.toLowerCase()} · ${c.sub}`;
   const l = $('pList'); l.innerHTML = '';
   c.items.forEach((it, i) => {
     const b = document.createElement('button');
