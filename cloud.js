@@ -47,7 +47,7 @@ const Cloud = (() => {
     return w && h;
   }
 
-  // o: bg, ink | mode:'turbo', alpha, cy, zoom, tilt, size, spectral (0..1), sway, mosh,
+  // o: bg, ink | mode:'turbo', alpha, cy, zoom, tilt, size, spectral (0..1), sway, mosh, amp (idle swell height),
   //    px (fixed pixels per CSS px: keeps the canvas size as set, for print)
   function draw(cv, t, o) {
     if (!cv.getClientRects().length || (!o.px && !fit(cv))) return;
@@ -70,7 +70,7 @@ const Cloud = (() => {
     const yaw = Math.sin(t * .09) * (o.sway ?? .45), ca = Math.cos(yaw), sa = Math.sin(yaw);
     const tilt = o.tilt ?? .45, ct = Math.cos(tilt), st = Math.sin(tilt), D = 2.7;
     const F = Math.min(W * 1.15, H * 2.4) * (o.zoom || 1), cy = H * (o.cy || .58);
-    const spec = o.spectral || 0, amp = .11 + .04 * Math.sin(t * .4);
+    const spec = o.spectral || 0, amp = (.11 + .04 * Math.sin(t * .4)) * (o.amp || 1);
     const aS = (o.alpha || 1) * (mosh ? .45 : 1), sz = Math.max(1, 1.1 * R * (o.size || 1));
     const turboMode = o.mode === 'turbo';
     if (!turboMode) ctx.fillStyle = o.ink;

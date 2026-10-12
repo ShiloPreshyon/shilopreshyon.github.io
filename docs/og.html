@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Link preview</title>
+<!-- 1200x630 card shown when the site's link is shared; rendered to og.png by tools/snapshot.swift -->
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+  html, body { margin: 0; background: #05070a; }
+  .card { width: 1200px; height: 630px; position: relative; overflow: hidden; color: #e6eef3; font-family: "IBM Plex Mono", monospace; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .who { position: absolute; left: 80px; bottom: 96px; }
+  h1 { margin: 0; font-weight: 500; font-size: 64px; letter-spacing: .3em; }
+  .sub { margin-top: 18px; font-size: 26px; letter-spacing: .2em; color: #7fd0ff; }
+  .bar { position: absolute; left: 0; right: 0; top: 0; height: 40px; background: linear-gradient(90deg, #05080b, #24435a);
+    font: bold 20px Tahoma, Verdana, sans-serif; display: flex; align-items: center; padding: 0 16px; color: #fff; }
+</style>
+</head>
+<body>
+<div class="card">
+  <canvas></canvas>
+  <div class="bar">The Beautiful Research Directory</div>
+  <div class="who"><h1>SHILO PRESHYON</h1><div class="sub">sound · research</div></div>
+</div>
+<script src="../cloud.js"></script>
+<script>
+(async () => {
+  await document.fonts.ready;
+  const cv = document.querySelector('canvas');
+  cv.width = 2400; cv.height = 1260;
+  Cloud.draw(cv, 41, { px: 2, bg: '#05070a', mode: 'turbo', alpha: 1, cy: .44, zoom: .72, tilt: .42, size: 1.5, sway: .5, amp: 2.6 });
+  document.body.dataset.ready = 'ok';
+})();
+</script>
+</body>
+</html>
