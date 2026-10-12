@@ -232,7 +232,7 @@ const flat = [];
 let credits = 0;
 for (const [yr, txt] of ENG) {
   flat.push({ yr });
-  txt.split('\n').forEach(l => { const [a, r, c] = l.split('|'); flat.push({ a, r, c }); credits += parseInt(r) || 1; // "2 EPs" counts as two });
+  txt.split('\n').forEach(l => { const [a, r, c] = l.split('|'); flat.push({ a, r, c }); credits += parseInt(r) || 1; /* "2 EPs" counts as two */ });
 }
 const half = Math.ceil(flat.length / 2);
 let lastYr = '';
