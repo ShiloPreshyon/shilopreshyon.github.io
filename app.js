@@ -243,15 +243,16 @@ $('listShare').onclick = async () => {
 //   -> fader (fade in/out) -> output, analyser and recorder.
 const MAX_LAYERS = 4;
 const COLL_DEFAULTS = { master: .9, fade: 2, rand: true, drift: false };
-let CL = { layers: [], ...COLL_DEFAULTS }; // layers: {u, c: collection id, i: item id, vol, pan, semi, tone, mute}
+let CL = { layers: [], ...COLL_DEFAULTS }; // layers: {u, c: collection id, i: item id, vol, pan, semi, cents, tone, mute}
 try { const v = JSON.parse(localStorage.getItem('collage')); if (v && Array.isArray(v.layers)) CL = { ...COLL_DEFAULTS, ...v }; } catch (e) {}
 CL.layers = CL.layers.filter(resolve).slice(0, MAX_LAYERS);
-CL.layers.forEach(L => { L.tone = L.tone || 0; });
+CL.layers.forEach(L => { L.tone = L.tone || 0; L.cents = L.cents || 0; });
 const saveCollage = () => { try { localStorage.setItem('collage', JSON.stringify(CL)); } catch (e) {} };
 const C = { playing: false, stopping: false, bus: null, out: null, nodes: new Map(), gen: 0, driftTimer: 0 };
 let collMsg = '';
 const layerBuf = L => { const r = resolve(L); return getBuf(r.coll.items[r.idx], r.coll); };
-const layerRate = L => Math.pow(2, L.semi / 12);
+// Pitch is varispeed: semitones plus fine cents. At 0 / 0 the rate is exactly 1, so the file plays untouched.
+const layerRate = L => Math.pow(2, (L.semi * 100 + (L.cents || 0)) / 1200);
 
 // Tone, one knob: left rolls off highs (low-pass 20 kHz -> 400 Hz), right rolls off lows (high-pass 20 Hz -> 2 kHz).
 // At centre the filter is taken out of the path entirely.
@@ -353,7 +354,7 @@ function stopDrift() {
 async function addLayer(coll, idx) {
   openWin('w-coll');
   if (CL.layers.length >= MAX_LAYERS) { collMsg = `Full: remove a layer first (${MAX_LAYERS} max)`; renderCollage(); return; }
-  const L = { u: (uid++).toString(36), c: coll.id, i: coll.items[idx].id, vol: .8, pan: 0, semi: 0, tone: 0, mute: false };
+  const L = { u: (uid++).toString(36), c: coll.id, i: coll.items[idx].id, vol: .8, pan: 0, semi: 0, cents: 0, tone: 0, mute: false };
   CL.layers.push(L); saveCollage();
   collMsg = `Added ${coll.items[idx].title}`;
   renderCollage();
@@ -382,7 +383,7 @@ function setLayer(L, k, v) {
   if (k === 'vol' || k === 'mute') n.g.gain.setTargetAtTime(L.mute ? 0 : L.vol, t, .02);
   if (k === 'pan') n.p.pan.setTargetAtTime(L.pan, t, .02);
   if (k === 'tone') applyTone(n, L.tone, t);
-  if (k === 'semi' && !C.driftTimer) {
+  if ((k === 'semi' || k === 'cents') && !C.driftTimer) {
     if (n.el) n.el.playbackRate = layerRate(L);
     else n.src.playbackRate.setTargetAtTime(layerRate(L), t, .02);
   }
@@ -458,11 +459,16 @@ function renderCollage() {
       `<td><input type="range" min="0" max="1" step="0.01" aria-label="Volume"></td>` +
       `<td><input type="range" min="-1" max="1" step="0.05" aria-label="Pan" title="Double-click to centre"></td>` +
       `<td><input type="range" min="-1" max="1" step="0.02" aria-label="Tone" title="Left darker, right brighter. Double-click to reset"></td>` +
-      `<td><select aria-label="Pitch in semitones">${semis}</select></td>` +
+      `<td class="pitch"><select aria-label="Pitch in semitones">${semis}</select>` +
+      `<input type="range" min="-100" max="100" step="1" aria-label="Fine pitch in cents"></td>` +
       `<td class="ctl"><button class="mini" title="Mute">M</button><button class="mini" title="Remove">✕</button></td>`;
     tr.querySelector('span').textContent = it.title;
-    const [vol, pan, tone] = tr.querySelectorAll('input'), semi = tr.querySelector('select'), [mute, rm] = tr.querySelectorAll('button');
-    vol.value = L.vol; pan.value = L.pan; tone.value = L.tone; semi.value = String(L.semi);
+    const [vol, pan, tone, fine] = tr.querySelectorAll('input'), semi = tr.querySelector('select'), [mute, rm] = tr.querySelectorAll('button');
+    vol.value = L.vol; pan.value = L.pan; tone.value = L.tone; semi.value = String(L.semi); fine.value = L.cents;
+    const fineTitle = () => fine.title = `Fine: ${L.cents > 0 ? '+' : ''}${L.cents} cents. Double-click to reset`;
+    fineTitle();
+    fine.oninput = () => { setLayer(L, 'cents', +fine.value); fineTitle(); };
+    fine.ondblclick = () => { fine.value = 0; setLayer(L, 'cents', 0); fineTitle(); };
     vol.oninput = () => setLayer(L, 'vol', +vol.value);
     pan.oninput = () => setLayer(L, 'pan', +pan.value);
     pan.ondblclick = () => { pan.value = 0; setLayer(L, 'pan', 0); };
@@ -498,7 +504,7 @@ $('collRand').onchange = e => setCollage('rand', e.target.checked);
 $('collDrift').onchange = e => setCollage('drift', e.target.checked);
 $('collShare').onclick = async () => {
   const url = `${location.origin}${location.pathname}#/collage/` +
-    CL.layers.map(L => [L.c, L.i, L.vol, L.pan, L.semi, L.mute ? 1 : 0, L.tone].join('~')).join(',') +
+    CL.layers.map(L => [L.c, L.i, L.vol, L.pan, L.semi, L.mute ? 1 : 0, L.tone, L.cents].join('~')).join(',') +
     `/${[CL.master, CL.fade, CL.rand ? 1 : 0, CL.drift ? 1 : 0].join('~')}`;
   try { await navigator.clipboard.writeText(url); collMsg = 'Link copied'; } catch (e) { prompt('Copy this link:', url); collMsg = ''; }
   renderCollage();
@@ -769,9 +775,9 @@ function route() {
     const num = (v, lo, hi, d) => v !== undefined && v !== '' && Number.isFinite(+v) ? Math.max(lo, Math.min(hi, +v)) : d;
     if (p[1]) {
       const layers = p[1].split(',').map(x => {
-        const [c, i, vol, pan, semi, mute, tone] = decodeURIComponent(x).split('~');
+        const [c, i, vol, pan, semi, mute, tone, cents] = decodeURIComponent(x).split('~');
         return { u: (uid++).toString(36), c, i, vol: num(vol, 0, 1, .8), pan: num(pan, -1, 1, 0), semi: Math.round(num(semi, -12, 12, 0)),
-          mute: mute === '1', tone: num(tone, -1, 1, 0) };
+          mute: mute === '1', tone: num(tone, -1, 1, 0), cents: Math.round(num(cents, -100, 100, 0)) };
       }).filter(resolve).slice(0, MAX_LAYERS);
       const [master, fade, rand, drift] = (p[2] || '').split('~');
       if (layers.length) {

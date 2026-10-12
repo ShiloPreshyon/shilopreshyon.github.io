@@ -156,3 +156,5 @@ table.coll select { font: 11px var(--ui); }
 .coll-opts label { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 .coll-opts input[type=range] { width: 80px; accent-color: var(--sel); }
 .coll-opts select { font: 11px var(--ui); }
+table.coll td.pitch { white-space: nowrap; }
+table.coll td.pitch input[type=range] { width: 56px; margin-left: 4px; }
