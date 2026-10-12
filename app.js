@@ -541,6 +541,7 @@ function placeWindows() {
   set('w-list', Math.max(112, W - lw - 24), 28, lw);
   set('w-coll', 140, 60, Math.min(700, W - 160));
   set('w-lic', 220, 120, Math.min(420, W - 240));
+  set('w-ethos', Math.max(150, W - rw - 60), 60, rw);
 }
 document.querySelectorAll('.win').forEach(w => {
   w.addEventListener('pointerdown', () => focusWin(w));
@@ -641,6 +642,7 @@ const latest = S.collections[0];
 const launch = {
   work: () => openDir(null), // the Work icon always shows every folder
   about: () => { openWin('w-about'); setHash('#/readme'); },
+  ethos: () => { openWin('w-ethos'); setHash('#/ethos'); },
   contact: () => { openWin('w-mail'); setHash('#/contact'); },
   portal: () => openPortal(P.coll || latest),
   playlist: () => { openWin('w-list'); renderList(); setHash('#/playlist'); },
@@ -648,7 +650,7 @@ const launch = {
   cv: () => openDoc('cv'),
   bio: () => openDoc('bio'),
 };
-const icons = [['Work', 'cd', 'work'], ['Readme.txt', 'doc', 'about'], ['CV.pdf', 'pdf', 'cv'], ['Bio.pdf', 'pdf', 'bio'],
+const icons = [['Work', 'cd', 'work'], ['Readme.txt', 'doc', 'about'], ['Ethos.txt', 'doc', 'ethos'], ['CV.pdf', 'pdf', 'cv'], ['Bio.pdf', 'pdf', 'bio'],
   ['Playlist', 'list', 'playlist'], ['Collage', 'layers', 'collage'],
   ['Contact', 'mail', 'contact'], ['Night Water', 'moon', 'portal']];
 icons.forEach(([n, ic, k]) => {
@@ -666,6 +668,7 @@ document.addEventListener('pointerdown', e => {
   if (!$('startMenu').contains(e.target) && e.target !== $('bStart')) { $('startMenu').classList.add('hide'); $('bStart').classList.remove('on'); }
 });
 $('aboutTxt').textContent = S.readme.replace('{email}', S.email);
+$('ethosTxt').textContent = S.ethos;
 $('mailLink').href = 'mailto:' + S.email; $('mailLink').textContent = S.email;
 document.querySelector('[data-ico=mail]').innerHTML = ICO.mail;
 
@@ -769,6 +772,7 @@ function route() {
   routing = true;
   const p = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (p[0] === 'readme' || p[0] === 'about') launch.about();
+  else if (p[0] === 'ethos') launch.ethos();
   else if (p[0] === 'contact') launch.contact();
   else if (S.docs[p[0]]) openDoc(p[0]);
   else if (p[0] === 'collage') {

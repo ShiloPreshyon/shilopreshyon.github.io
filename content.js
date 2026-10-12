@@ -5,6 +5,22 @@ window.SITE = {
   tagline: "sound · research",
   email: "spsounddirectory@proton.me", // TODO: move to an address on the site's own domain
 
+  // The desktop's Ethos.txt, in Shilo's words.
+  ethos: `ETHOS
+
+RECIPROCITY WITH MATERIALS AND PROCESS
+Sound is gathered from places, people and moments, and something is given back in the making. Nothing here is a resource to be used up. Every recorded moment has its own value, whether or not it becomes a piece.
+
+PLAY WITHOUT ATTACHMENT
+The work starts by letting go of what it should be. Materials are arranged, rearranged and left to sit beside each other. Collage doesn't resolve; it lets the space between things speak.
+
+SPIRIT IS EVERYWHERE
+In a field recording, in tape hiss, in a loop that won't line up. Playing with the arrangement of materials is a way of unveiling it.
+
+The past speaks through the archive. The present listens in the making. The future listener meets what remains, and finds their own relationship to it.
+
+That is why the samples here are free: so the play can continue with you.`,
+
   // The desktop's Readme.txt: a guide to the site. {email} is filled in from above.
   readme: `THE BEAUTIFUL RESEARCH DIRECTORY
 Shilo Preshyon · sound · research
@@ -22,6 +38,7 @@ Collage       layer up to four sounds at once
 Night Water   a dark, full-screen listening room
 CV.pdf        for applications and paperwork
 Bio.pdf       the short version
+Ethos.txt     why the work is made this way
 Contact       write to Shilo
 
 
@@ -46,7 +63,7 @@ The picture in Now Playing is the sound itself. Each row of points is a moment o
 
 ABOUT SHILO
 
-Shilo Preshyon is a sound artist, collage practitioner and audio engineer based in Yellow Point, BC, on unceded Stz’uminus territory. Their practice works through collage, asking what an artist owes the sounds they gather. The full bio and CV are on the desktop.
+Shilo Preshyon is a sound artist, collage practitioner and audio engineer based in Yellow Point, BC, on unceded Stz’uminus territory. Their practice works through collage, asking what an artist owes the sounds they gather. Ethos.txt says why; the full bio and CV are on the desktop.
 
 
 CONTACT
@@ -94,6 +111,7 @@ No ads, no analytics, no accounts. Your playlist and collage are kept only in yo
 Shilo Preshyon
 
 Free for any use: sample it, flip it, release it.
+Why free? See Ethos.txt on the desktop.
 
 Send Shilo what you make. Let's talk about it.
 {email}
