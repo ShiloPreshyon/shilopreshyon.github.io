@@ -3,7 +3,7 @@
 window.SITE = {
   name: "Shilo Preshyon",
   tagline: "sound · image · research",
-  email: "hello@shilopreshyon.com", // TODO: the address people should see
+  email: "spsounddirectory@proton.me", // TODO: move to an address on the site's own domain
 
   // TODO: real bio and statement
   about: `Short bio goes here: two or three sentences in third person,
