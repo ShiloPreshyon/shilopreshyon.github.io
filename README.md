@@ -20,8 +20,15 @@ then the next one starts. It's saved only in their browser; "Copy share link" ma
 ## Collage
 
 ⧉ next to any sound adds it as a layer in the Collage window (up to 4). Layers loop on their own clocks, each with
-volume, pan and pitch (±12 semitones). Bounce renders 30 s offline to a 24-bit / 48 kHz WAV, turned down rather
+volume, pan and pitch (±12 semitones). Record captures the next 30 s as it plays to a 24-bit WAV, turned down rather
 than clipped if the layers sum over full scale. Share links: `#/collage/<collection>~<item>~<vol>~<pan>~<semi>~<mute>,…`.
+
+## Long pieces and samples
+
+Items with `stream: true` play through an `<audio>` element as they download instead of being decoded whole,
+so long pieces start at once and don't fill memory. Midi Art uses these: 256k AAC listening copies made with
+`afconvert -f m4af -d aac@48000 -b 256000 -q 127 --src-complexity bats -r 127 in.wav out.m4a`.
+A collection's `license` text appears as License.txt at the top of its folder.
 
 ## Adding a collection
 

@@ -34,9 +34,11 @@ function ctx() {
   }
   return P.ac;
 }
+const audioUrl = (coll, item) => `audio/${coll.id}/${item.id}.${item.ext || 'flac'}`;
 function getBuf(item, coll) {
+  if (item.stream) return openStream(coll, item);
   if (!P.cache.has(item.id)) {
-    const p = fetch(`audio/${coll.id}/${item.id}.${item.ext || 'flac'}`)
+    const p = fetch(audioUrl(coll, item))
       .then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
       .then(a => ctx().decodeAudioData(a));
     p.catch(() => P.cache.delete(item.id));
@@ -44,31 +46,64 @@ function getBuf(item, coll) {
   }
   return P.cache.get(item.id);
 }
+// Long pieces stream through an <audio> element instead of being decoded whole (a 28-minute piece would need
+// ~650 MB of memory). It feeds the same output and analyser. Each call makes a fresh element.
+function openStream(coll, item) {
+  return new Promise((res, rej) => {
+    const el = new Audio();
+    el.preload = 'auto';
+    el.addEventListener('loadedmetadata', () => res({ stream: true, el, node: null, duration: el.duration || item.len }), { once: true });
+    el.addEventListener('error', () => rej(new Error('stream failed')), { once: true });
+    el.src = audioUrl(coll, item);
+  });
+}
+function dropStream(m) {
+  if (!m || !m.stream) return;
+  m.el.pause(); m.el.onended = null;
+  if (m.node) m.node.disconnect();
+  m.el.removeAttribute('src'); m.el.load(); // release the connection and memory
+}
 async function select(coll, idx, autoplay = true, lpos = null) {
   const g = ++gen;
   ctx().resume();
   stopSrc();
   if (coll !== P.coll) P.loop = coll.loop !== false; // loops repeat by default, Studio tracks play through
   if (C.playing) collageStop();
+  dropStream(P.buffer);
   Object.assign(P, { coll, idx, lpos, offset: 0, playing: false, loading: true, error: false, buffer: null });
   if (moshPref) Cloud.mosh(3000);
   if (lpos === null) setHash(`#/work/${coll.id}/${coll.items[idx].id}`);
   ui();
   let b;
   try { b = await getBuf(coll.items[idx], coll); } catch (e) { if (g === gen) { P.loading = false; P.error = true; ui(); } return; }
-  if (g !== gen) return; // a newer selection superseded this one
+  if (g !== gen) { dropStream(b); return; } // a newer selection superseded this one
   P.loading = false; P.buffer = b;
   if (autoplay) start(0); else ui();
   // warm the next one
   const nx = lpos === null ? (coll.items[idx + 1] && { coll, idx: idx + 1 }) : resolve(PL.entries[lpos + 1]);
-  if (nx) getBuf(nx.coll.items[nx.idx], nx.coll);
+  if (nx && !nx.coll.items[nx.idx].stream) getBuf(nx.coll.items[nx.idx], nx.coll);
 }
 function start(off) {
   const ac = ctx(); ac.resume();
   if (C.playing) collageStop();
   stopSrc();
-  const s = ac.createBufferSource();
   const d = P.buffer.duration, inList = P.lpos !== null;
+  if (P.buffer.stream) { // streamed piece: plays once in a playlist, follows the Loop box otherwise
+    const m = P.buffer, el = m.el;
+    if (!m.node) { m.node = ac.createMediaElementSource(el); m.node.connect(ac.destination); m.node.connect(P.an); }
+    el.loop = !inList && P.loop;
+    el.currentTime = Math.min(off % d, Math.max(0, d - .05));
+    el.onended = () => {
+      if (P.buffer !== m) return;
+      P.playing = false; P.offset = 0;
+      if (inList) listNext();
+      else if (P.idx + 1 < P.coll.items.length) select(P.coll, P.idx + 1); else ui();
+    };
+    el.play().catch(() => { P.playing = false; ui(); });
+    P.playing = true;
+    return ui();
+  }
+  const s = ac.createBufferSource();
   s.buffer = P.buffer; s.loop = inList || P.loop;
   s.connect(ac.destination); s.connect(P.an);
   s.onended = () => {
@@ -83,10 +118,17 @@ function start(off) {
   P.src = s; P.startAt = ac.currentTime - off; P.playing = true;
   ui();
 }
-function stopSrc() { if (P.src) { const s = P.src; P.src = null; try { s.stop(); } catch (e) {} } }
-function elapsed() { return P.playing ? P.ac.currentTime - P.startAt : P.offset; }
+function stopSrc() {
+  if (P.buffer && P.buffer.stream) P.buffer.el.pause();
+  if (P.src) { const s = P.src; P.src = null; try { s.stop(); } catch (e) {} }
+}
+function elapsed() {
+  if (P.buffer && P.buffer.stream) return P.playing ? P.buffer.el.currentTime : P.offset;
+  return P.playing ? P.ac.currentTime - P.startAt : P.offset;
+}
 function pos() {
   if (!P.buffer) return 0;
+  if (P.buffer.stream) return elapsed();
   const p = elapsed(), d = P.buffer.duration;
   if (P.lpos !== null) return p % d;
   if (!P.playing) return P.offset;
@@ -106,6 +148,7 @@ function step(d) {
   select(P.coll, (P.idx + d + n) % n);
 }
 function setLoop(v) {
+  if (P.buffer && P.buffer.stream && P.lpos === null) P.buffer.el.loop = v;
   if (P.src && P.lpos === null) { const p = pos(); P.src.loop = v; P.startAt = P.ac.currentTime - p; }
   P.loop = v; ui();
 }
@@ -207,6 +250,17 @@ let collMsg = '';
 const layerBuf = L => { const r = resolve(L); return getBuf(r.coll.items[r.idx], r.coll); };
 
 function layerGraph(ac, out, L, buf, when) {
+  if (buf.stream) { // long piece: its own looping <audio> element; pitch by varispeed, like the loops
+    const el = buf.el;
+    el.loop = true; el.preservesPitch = el.webkitPreservesPitch = el.mozPreservesPitch = false;
+    el.playbackRate = Math.pow(2, L.semi / 12);
+    const src = ac.createMediaElementSource(el);
+    const g = ac.createGain(); g.gain.value = L.mute ? 0 : L.vol;
+    const p = ac.createStereoPanner(); p.pan.value = L.pan;
+    src.connect(g); g.connect(p); p.connect(out);
+    setTimeout(() => el.play().catch(() => {}), Math.max(0, (when - ac.currentTime) * 1000));
+    return { src, g, p, el, buf };
+  }
   const src = ac.createBufferSource();
   src.buffer = buf; src.loop = true;
   src.playbackRate.value = Math.pow(2, L.semi / 12);
@@ -234,9 +288,13 @@ async function collagePlay() {
   if (moshPref) Cloud.mosh(3000);
   renderCollage();
 }
+function stopLayer(n) {
+  if (n.el) { n.src.disconnect(); dropStream(n.buf); } else { try { n.src.stop(); } catch (e) {} }
+}
 function collageStop() {
+  if (rec) finishRecording();
   C.gen++;
-  C.nodes.forEach(n => { try { n.src.stop(); } catch (e) {} });
+  C.nodes.forEach(stopLayer);
   C.nodes.clear();
   if (C.bus) { C.bus.disconnect(); C.bus = null; }
   if (C.playing) { C.playing = false; renderCollage(); }
@@ -255,7 +313,7 @@ async function addLayer(coll, idx) {
 }
 function removeLayer(u) {
   const n = C.nodes.get(u);
-  if (n) { try { n.src.stop(); } catch (e) {} C.nodes.delete(u); }
+  if (n) { stopLayer(n); C.nodes.delete(u); }
   CL.layers = CL.layers.filter(L => L.u !== u); saveCollage(); collMsg = '';
   if (!CL.layers.length) collageStop();
   renderCollage();
@@ -266,9 +324,12 @@ function setLayer(L, k, v) {
   const t = P.ac.currentTime; // short glides, so moving a control never clicks
   if (k === 'vol' || k === 'mute') n.g.gain.setTargetAtTime(L.mute ? 0 : L.vol, t, .02);
   if (k === 'pan') n.p.pan.setTargetAtTime(L.pan, t, .02);
-  if (k === 'semi') n.src.playbackRate.setTargetAtTime(Math.pow(2, L.semi / 12), t, .02);
+  if (k === 'semi') {
+    if (n.el) n.el.playbackRate = Math.pow(2, L.semi / 12);
+    else n.src.playbackRate.setTargetAtTime(Math.pow(2, L.semi / 12), t, .02);
+  }
 }
-// Bounce: render the collage offline to a 24-bit / 48 kHz WAV the visitor can keep.
+// 24-bit WAV writer for recorded collages.
 function wav24(b) {
   const ch = [b.getChannelData(0), b.getChannelData(1)], n = b.length;
   let peak = 0;
@@ -287,20 +348,41 @@ function wav24(b) {
   }
   return new Blob([v], { type: 'audio/wav' });
 }
-async function collageBounce(seconds = 30) {
-  if (!CL.layers.length) return;
-  collMsg = 'Bouncing…'; renderCollage();
-  try {
-    const bufs = await Promise.all(CL.layers.map(layerBuf));
-    const sr = 48000, off = new OfflineAudioContext(2, sr * seconds, sr);
-    CL.layers.forEach((L, n) => layerGraph(off, off.destination, L, bufs[n], 0));
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(wav24(await off.startRendering()));
-    a.download = 'Shilo Preshyon - collage.wav';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
-    collMsg = `Saved ${seconds} s as WAV`;
-  } catch (e) { collMsg = 'Bounce failed'; }
+// Record: capture the next 30 s of the collage as it plays (works for streamed layers too).
+// Stopping early saves what was recorded so far.
+let rec = null;
+function startRecording(seconds = 30) {
+  if (!C.playing || rec) return;
+  const ac = P.ac, sp = ac.createScriptProcessor(4096, 2, 2), sink = ac.createGain();
+  sink.gain.value = 0; // keeps the processor running without being heard twice
+  rec = { sp, sink, L: [], R: [], n: 0, total: Math.round(seconds * ac.sampleRate), sr: ac.sampleRate };
+  sp.onaudioprocess = e => {
+    if (!rec || rec.sp !== sp) return;
+    rec.L.push(e.inputBuffer.getChannelData(0).slice()); rec.R.push(e.inputBuffer.getChannelData(1).slice());
+    rec.n += e.inputBuffer.length;
+    if (rec.n >= rec.total) finishRecording();
+  };
+  C.bus.connect(sp); sp.connect(sink); sink.connect(ac.destination);
+  renderCollage();
+}
+function finishRecording() {
+  const r = rec; rec = null;
+  r.sp.onaudioprocess = null;
+  try { C.bus && C.bus.disconnect(r.sp); } catch (e) {}
+  r.sp.disconnect(); r.sink.disconnect();
+  const len = Math.min(r.n, r.total);
+  if (len < r.sr / 2) { collMsg = 'Recording too short'; return renderCollage(); }
+  const out = new AudioBuffer({ numberOfChannels: 2, length: len, sampleRate: r.sr });
+  [r.L, r.R].forEach((chunks, c) => {
+    const d = out.getChannelData(c); let o = 0;
+    for (const x of chunks) { if (o >= len) break; d.set(x.subarray(0, len - o), o); o += x.length; }
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(wav24(out));
+  a.download = 'Shilo Preshyon - collage.wav';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  collMsg = `Saved ${Math.round(len / r.sr)} s as WAV`;
   renderCollage();
 }
 function renderCollage() {
@@ -328,15 +410,18 @@ function renderCollage() {
   });
   if (!CL.layers.length) rows.innerHTML = `<tr><td colspan="6" class="empty">Empty. Press ⧉ next to any sound in the Work window to layer it here. Up to ${MAX_LAYERS} play at once, each looping on its own clock.</td></tr>`;
   $('collCount').textContent = `${CL.layers.length} of ${MAX_LAYERS} layers`;
-  $('collMsg').textContent = collMsg || (C.playing ? 'Playing: layers drift in and out of phase' : '');
+  $('collMsg').textContent = rec ? `Recording… ${Math.floor(rec.n / rec.sr)} / ${Math.round(rec.total / rec.sr)} s`
+    : collMsg || (C.playing ? 'Playing: layers drift in and out of phase' : '');
   $('collPlay').disabled = !CL.layers.length || C.playing;
   $('collStop').disabled = !C.playing;
-  $('collShare').disabled = $('collBounce').disabled = $('collClear').disabled = !CL.layers.length;
+  $('collShare').disabled = $('collClear').disabled = !CL.layers.length;
+  $('collRec').disabled = !C.playing || !!rec;
+  $('collRec').textContent = rec ? '⏺ Recording…' : '⏺ Record 30 s';
   ui();
 }
 $('collPlay').onclick = collagePlay;
 $('collStop').onclick = collageStop;
-$('collBounce').onclick = () => collageBounce(30);
+$('collRec').onclick = () => startRecording(30);
 $('collClear').onclick = () => { collageStop(); CL.layers = []; saveCollage(); collMsg = ''; renderCollage(); };
 $('collShare').onclick = async () => {
   const url = `${location.origin}${location.pathname}#/collage/` + CL.layers.map(L => [L.c, L.i, L.vol, L.pan, L.semi, L.mute ? 1 : 0].join('~')).join(',');
@@ -374,6 +459,7 @@ function placeWindows() {
   const lw = Math.min(440, W - 140);
   set('w-list', Math.max(112, W - lw - 24), 28, lw);
   set('w-coll', 140, 60, Math.min(620, W - 160));
+  set('w-lic', 220, 120, Math.min(420, W - 240));
 }
 document.querySelectorAll('.win').forEach(w => {
   w.addEventListener('pointerdown', () => focusWin(w));
@@ -451,14 +537,19 @@ function renderDir() {
   }
   $('dirTitle').textContent = `${c.title} — ${c.sub}`;
   $('dirAddr').textContent = `C:\\Work\\${c.title} — ${c.sub}`;
-  const studio = c.kind === 'studio';
+  const studio = c.kind === 'studio', samples = c.kind === 'samples';
   const addTh = '<th title="+ add to playlist · ⧉ add to collage">+ ⧉</th>';
   $('dirHead').innerHTML = studio ? `<th>Name</th><th>Artist</th><th>Role</th><th>Year</th><th>Length</th>${addTh}`
+    : samples ? `<th>Name</th><th>Length</th><th>Type</th>${addTh}`
     : `<th>Name</th><th>Date</th><th>Length</th><th>Type</th>${addTh}`;
-  c.items.forEach((it, i) => rows.appendChild(row('wav', studio ? [it.title, it.artist, it.role, it.year, fmt(it.len)] : [it.title, it.date, fmt(it.len), 'FLAC audio'], () => {
+  if (c.license) rows.appendChild(row('doc', ['License.txt', '', ...(samples ? ['Text'] : ['', 'Text'])], () => openLicense(c)));
+  c.items.forEach((it, i) => rows.appendChild(row('wav', studio ? [it.title, it.artist, it.role, it.year, fmt(it.len)]
+    : samples ? [it.title, fmt(it.len), 'AAC audio'] : [it.title, it.date, fmt(it.len), 'FLAC audio'], () => {
     openWin('w-play'); select(c, i);
   }, P.coll === c && P.idx === i, () => addToList(c, i), () => addLayer(c, i))));
-  rows.appendChild(row('moon', [`${c.title} — Night Water`, '', '', ...(studio ? ['', ''] : ['Portal'])], () => openPortal(c)));
+  // file rows are the ones with add buttons; tag them with their item index (License.txt sits above them)
+  [...rows.querySelectorAll('tr')].filter(r => r.querySelector('td.add button')).forEach((r, i) => r.dataset.i = i);
+  rows.appendChild(row('moon', [`${c.title} — Night Water`, ...(studio ? ['', '', '', ''] : samples ? ['', 'Portal'] : ['', '', 'Portal'])], () => openPortal(c)));
   $('dirCount').textContent = `${c.items.length + 1} object(s)`;
   $('dirNote').textContent = c.note;
 }
@@ -497,6 +588,12 @@ $('aboutTxt').textContent = S.readme.replace('{email}', S.email);
 $('mailLink').href = 'mailto:' + S.email; $('mailLink').textContent = S.email;
 document.querySelector('[data-ico=mail]').innerHTML = ICO.mail;
 
+function openLicense(c) {
+  $('licTitle').textContent = `License.txt — ${c.title}`;
+  $('licTxt').textContent = c.license.replace('{email}', S.email);
+  openWin('w-lic');
+}
+
 /* ---------------- document viewer ---------------- */
 // CV and bio open in a window (the same page the PDF is made from, scaled to fit), with the PDF one click away.
 let docOpen = null;
@@ -534,7 +631,7 @@ function ui() {
   $('bPlay').textContent = P.playing ? '❚❚' : '▶';
   $('cLoop').checked = P.loop;
   document.querySelectorAll('#listRows tr').forEach((r, n) => r.classList.toggle('sel', P.lpos === n));
-  if (dirPath) document.querySelectorAll('#dirRows tr').forEach((r, i) => r.classList.toggle('sel', !!P.coll && P.coll.id === dirPath && P.idx === i));
+  if (dirPath) document.querySelectorAll('#dirRows tr[data-i]').forEach(r => r.classList.toggle('sel', !!P.coll && P.coll.id === dirPath && P.idx === +r.dataset.i));
   document.querySelectorAll('#pList button').forEach((b, i) => b.classList.toggle('on', !!P.coll && P.coll === portalColl && P.idx === i));
 }
 
@@ -580,7 +677,7 @@ function surf(d) {
   if (!portalColl) openWin('w-play');
   select(c, n);
   // keep the playing row in view in the Work window
-  if (dirPath === c.id) { const r = document.querySelectorAll('#dirRows tr')[n]; if (r) r.scrollIntoView({ block: 'nearest' }); }
+  if (dirPath === c.id) { const r = document.querySelector(`#dirRows tr[data-i="${n}"]`); if (r) r.scrollIntoView({ block: 'nearest' }); }
 }
 
 /* ---------------- routing ---------------- */

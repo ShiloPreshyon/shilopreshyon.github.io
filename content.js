@@ -15,6 +15,7 @@ Welcome. This is a working archive of sound: field recordings, studio sessions, 
 WHAT'S HERE
 
 Work          collections of sound, a folder each
+Midi Art      personal samples, free for any use (inside Work)
 Studio        productions and mixes (inside Work)
 Playlist      your own sequence of loops
 Collage       layer up to four sounds at once
@@ -30,7 +31,7 @@ HOW TO LISTEN
 · ↑ ↓ arrow keys move through the files, playing each one as you go. ← → move within a sound.
 · Space bar plays and pauses. ⏮ ⏭ step through the folder. Click the progress bar to move within a sound.
 · Press + beside a loop to add it to your Playlist. Choose how many times each one repeats, then Play all. "Copy share link" sends your arrangement to someone else.
-· Press ⧉ beside any sound to layer it in the Collage window. Up to four play at once, each looping on its own clock, so they drift in and out of phase. Set each layer's volume, pan and pitch; Bounce saves 30 seconds of it as a WAV.
+· Press ⧉ beside any sound to layer it in the Collage window. Up to four play at once, each looping on its own clock, so they drift in and out of phase. Set each layer's volume, pan and pitch; Record saves the next 30 seconds as a WAV.
 · Open a .portal file, or the Night Water icon, to hear a collection in the dark. Esc brings you back.
 · Windows can be dragged around and closed. The taskbar brings them back.
 · Headphones or good speakers are best.
@@ -38,7 +39,7 @@ HOW TO LISTEN
 
 ABOUT THE SOUND
 
-Every file is lossless, 24-bit / 48 kHz FLAC, played straight from the file with nothing added along the way: no streaming service, no lossy compression, no processing.
+Loops are lossless 24-bit / 48 kHz FLAC. Longer pieces are high-quality 256k AAC so they can start playing straight away. Everything plays straight from the file with nothing added along the way: no streaming service, no processing.
 
 The picture in Now Playing is the sound itself. Each row of points is a moment of its spectrum, low frequencies on the left, drifting away from you as it plays. Untick Datamosh if you'd like it to stay still between files.
 
@@ -79,6 +80,43 @@ No ads, no analytics, no accounts. Your playlist and collage are kept only in yo
         { id: "june-12-2026-3", title: "June 12 2026 #3", date: "2026-06-12", len: 11.15 },
         { id: "june-19-2026-1", title: "June 19 2026 #1", date: "2026-06-19", len: 14.60 },
         { id: "june-19-2026-2", title: "June 19 2026 #2", date: "2026-06-19", len: 60.34 },
+      ],
+    },
+    {
+      // Shilo's own samples. stream: too long to load whole, so it plays as it downloads.
+      id: "midi-art",
+      title: "Midi Art",
+      sub: "Personal samples",
+      kind: "samples",
+      year: 2025,
+      note: "Free for any use. Send Shilo what you make, let's talk about it.",
+      license: `MIDI ART: PERSONAL SAMPLES
+Shilo Preshyon
+
+Free for any use: sample it, flip it, release it.
+
+Send Shilo what you make. Let's talk about it.
+{email}
+
+Originals are 96 kHz WAV; downloads are coming soon.
+What plays here are high-quality AAC listening copies.`,
+      loop: false,
+      items: [
+        { id: "midi-art-1", title: "Midi Art 1", len: 95.04, ext: "m4a", stream: true },
+        { id: "midi-art-2", title: "Midi Art 2", len: 386.82, ext: "m4a", stream: true },
+        { id: "midi-art-3", title: "Midi Art 3", len: 35.01, ext: "m4a", stream: true },
+        { id: "midi-art-4", title: "Midi Art 4", len: 71.36, ext: "m4a", stream: true },
+        { id: "midi-art-5", title: "Midi Art 5", len: 26.18, ext: "m4a", stream: true },
+        { id: "midi-art-6", title: "Midi Art 6", len: 381.70, ext: "m4a", stream: true },
+        { id: "midi-art-7", title: "Midi Art 7", len: 388.61, ext: "m4a", stream: true },
+        { id: "midi-art-8", title: "Midi Art 8", len: 183.38, ext: "m4a", stream: true },
+        { id: "midi-art-9", title: "Midi Art 9", len: 973.57, ext: "m4a", stream: true },
+        { id: "midi-art-10", title: "Midi Art 10", len: 282.62, ext: "m4a", stream: true },
+        { id: "midi-art-11", title: "Midi Art 11", len: 133.80, ext: "m4a", stream: true },
+        { id: "midi-art-12", title: "Midi Art 12", len: 1709.70, ext: "m4a", stream: true },
+        { id: "midi-art-13", title: "Midi Art 13", len: 176.03, ext: "m4a", stream: true },
+        { id: "midi-art-14", title: "Midi Art 14", len: 203.71, ext: "m4a", stream: true },
+        { id: "midi-art-15", title: "Midi Art 15", len: 511.68, ext: "m4a", stream: true },
       ],
     },
     {

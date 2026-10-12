@@ -87,6 +87,7 @@ td.add .mini + .mini { margin-left: 2px; }
 table.coll input[type=range] { width: 84px; vertical-align: middle; accent-color: var(--sel); }
 table.coll select { font: 11px var(--ui); }
 .toolbar { flex-wrap: wrap; }
+.txt.short-txt { height: auto; max-height: 60vh; }
 
 /* document viewer */
 .toolbar a.btn98 { text-decoration: none; display: inline-block; }

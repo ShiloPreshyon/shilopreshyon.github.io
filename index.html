@@ -30,6 +30,7 @@
   <p>sound · research</p>
   <h2>Work</h2>
   <p>Small Loops — LĒNA Residency · JOYA: AiR, 2026 (nine audio loops)</p>
+  <p>Midi Art — personal samples, free for any use (15 pieces, about 1.5 hours)</p>
   <p>Studio — productions and mixes, including Cartoon Lizard, “Neighbouring Hotels” (Sentinels EP, 2019)</p>
   <h2>Documents</h2>
   <p><a href="files/Shilo-Preshyon-CV.pdf">CV (PDF)</a> · <a href="files/Shilo-Preshyon-Bio.pdf">Bio (PDF)</a></p>
@@ -106,7 +107,7 @@
     <div class="toolbar">
       <button class="btn98" id="collPlay">▶ Play</button>
       <button class="btn98" id="collStop">■ Stop</button>
-      <button class="btn98" id="collBounce" title="Save 30 seconds of the collage as a WAV file">⤓ Bounce 30 s</button>
+      <button class="btn98" id="collRec" title="Record the next 30 seconds of the collage as a WAV file">⏺ Record 30 s</button>
       <button class="btn98" id="collShare">Copy share link</button>
       <button class="btn98" id="collClear">Clear</button>
     </div>
@@ -114,6 +115,12 @@
       <table class="coll"><thead><tr><th>#</th><th>Sound</th><th>Volume</th><th>Pan</th><th>Pitch</th><th></th></tr></thead><tbody id="collRows"></tbody></table>
     </div>
     <div class="status"><div id="collCount"></div><div id="collMsg"></div></div>
+  </div>
+
+  <div class="win hide" id="w-lic" data-title="License.txt">
+    <div class="tb"><span id="licTitle">License.txt</span><button data-close aria-label="Close">✕</button></div>
+    <div class="menu"><span><u>F</u>ile</span><span><u>E</u>dit</span><span><u>S</u>earch</span></div>
+    <div class="inset txt short-txt" id="licTxt"></div>
   </div>
 
   <div class="win hide" id="w-mail" data-title="Contact">
