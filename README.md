@@ -33,3 +33,8 @@ swiftc -O tools/make-pdfs.swift -o /tmp/make-pdfs
 
 Add `,full` after `#pdf` for application copies with the phone and Gmail from `docs/contact-private.js`
 (gitignored, so those details never go online). The site's copies show only the public email.
+
+## Publishing
+
+Live at https://shilopreshyon.github.io (GitHub Pages from `main` of the public repo
+ShiloPreshyon/shilopreshyon.github.io). Commit and `git push`; it updates within a minute or two.
