@@ -82,6 +82,7 @@ function openStream(coll, item) {
   return new Promise((res, rej) => {
     const el = new Audio();
     el.preload = 'auto';
+    el.crossOrigin = 'anonymous'; // the audio is on the CDN; without this the browser silences it inside Web Audio
     el.addEventListener('loadedmetadata', () => res({ stream: true, el, node: null, duration: el.duration || item.len }), { once: true });
     el.addEventListener('error', () => rej(new Error('stream failed')), { once: true });
     el.src = audioUrl(coll, item);
