@@ -29,7 +29,7 @@ html.pdf .page { margin: 0; }
 .band.thin h1 { font-size: 14px; }
 .band .where { margin-top: 8px; font: 10.5px var(--mono); letter-spacing: .12em; color: var(--cyan); }
 .band.thin .where { display: none; }
-.band .portrait { position: absolute; right: 52px; top: 22px; width: 176px; }
+.band .portrait { position: absolute; right: 52px; top: 18px; width: 204px; }
 
 /* Win98 bits */
 .win { background: var(--face); border: 2px solid; border-color: #dfdfdf var(--dk) var(--dk) #dfdfdf;
@@ -38,7 +38,7 @@ html.pdf .page { margin: 0; }
   color: #fff; font: bold 11px var(--ui); background: linear-gradient(90deg, #05080b, #24435a); }
 .tb small { font: 10px var(--mono); color: #b8c8d4; font-weight: normal; }
 .inset { border: 2px solid; border-color: var(--lo) var(--hi) var(--hi) var(--lo); }
-.portrait img { display: block; width: 100%; aspect-ratio: 672 / 522; object-fit: cover; filter: grayscale(1) contrast(1.05); }
+.portrait img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; filter: grayscale(1) contrast(1.05); }
 
 .addr { margin: 0 -52px 18px; background: var(--face); border-bottom: 1px solid var(--dk); box-shadow: inset 0 1px 0 var(--hi);
   display: flex; align-items: center; gap: 8px; padding: 4px 52px; font: 11px var(--ui); flex: none; }
