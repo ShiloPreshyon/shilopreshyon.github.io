@@ -160,3 +160,4 @@ table.coll select { font: 11px var(--ui); }
 table.coll td.pitch { white-space: nowrap; }
 table.coll td.pitch input[type=range] { width: 56px; margin-left: 4px; }
 a.mini { display: inline-block; text-align: center; text-decoration: none; color: #000; line-height: 13px; vertical-align: middle; }
+.dim { color: var(--lo); }

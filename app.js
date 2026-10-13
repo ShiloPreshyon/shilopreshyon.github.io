@@ -673,7 +673,7 @@ function renderDir() {
     sec.collections.forEach(k => rows.appendChild(row('folder', [k.sub ? `${k.title} — ${k.sub}` : k.title, k.items.length,
       longFmt(totalLen(k.items)), 'File folder'], () => openDir(k.id))));
     $('dirCount').textContent = `${sec.collections.length} object(s)`;
-    $('dirNote').textContent = sec.downloads ? 'Free to download and use. See License.txt inside each folder.' : S.name;
+    $('dirNote').textContent = sec.downloads ? 'Free to use · License.txt' : S.name;
     return;
   }
   const section = findSection(c.section);
@@ -698,7 +698,7 @@ function renderDir() {
   });
   rows.appendChild(row('moon', [`${c.title} — Night Water`, ...Array(cols - 2).fill(''), 'Portal'], () => openPortal(c)));
   $('dirCount').textContent = `${c.items.length + (c.license ? 2 : 1)} object(s)`;
-  $('dirNote').textContent = c.note || (samples ? 'Free to download and use. See License.txt.' : S.name);
+  $('dirNote').textContent = c.note || (samples ? 'Free to use · License.txt' : S.name);
 }
 $('dirUp').onclick = () => {
   if (dirPath && !dirPath.startsWith('sec:')) openDir('sec:' + findColl(dirPath).section); else openDir(null);
@@ -718,7 +718,7 @@ const launch = {
   bio: () => openDoc('bio'),
 };
 S.sections.forEach(s => launch['sec:' + s.id] = () => openDir('sec:' + s.id));
-const icons = [...S.sections.map(s => [s.title, s.icon, 'sec:' + s.id]), ['Readme.txt', 'doc', 'about'], ['Ethos.txt', 'doc', 'ethos'], ['CV.pdf', 'pdf', 'cv'], ['Bio.pdf', 'pdf', 'bio'],
+const icons = [...S.sections.map(s => [s.title, s.icon, 'sec:' + s.id]), ['Readme.txt', 'doc', 'about'], ['Ethos.txt', 'doc', 'ethos'],
   ['Playlist', 'list', 'playlist'], ['Collage', 'layers', 'collage'],
   ['Contact', 'mail', 'contact'], ['Night Water', 'moon', 'portal']];
 icons.forEach(([n, ic, k]) => {
@@ -906,11 +906,8 @@ const tick = () => { const n = new Date(); $('clock').textContent = n.getHours()
 placeWindows();
 addEventListener('resize', placeWindows);
 openWin('w-play');
-// First visit: the Readme opens beside the Work folder.
-let seen = true;
-try { seen = !!localStorage.getItem('seen'); localStorage.setItem('seen', '1'); } catch (e) {}
 if (location.hash.length > 2) route();
-else { if (!seen) openWin('w-about'); openDir(null); }
+else openDir(null);
 addEventListener('hashchange', route);
 renderList(); renderCollage(); ui(); tick(); setInterval(tick, 10000);
 requestAnimationFrame(frame);
