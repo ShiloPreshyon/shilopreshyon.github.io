@@ -43,6 +43,11 @@ or replace audio there, then run `node tools/sync.mjs` and commit the new `libra
 Titles, subtitles, notes, loop folders, credits (artist / role / year) and old ids kept as aliases go in
 `library.json` under `folders`.
 
+## Read Me
+
+The desktop's Read Me shows `readme.txt`. Shilo edits it on GitHub: visit `#/edit` on the site (it opens
+GitHub's editor for that file), write, and commit. GitHub keeps every version.
+
 ## Addresses
 
 Every view has a link: `#/work/<collection>`, `#/work/<collection>/<item>`, `#/portal/<collection>`,

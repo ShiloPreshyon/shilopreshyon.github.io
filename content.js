@@ -5,11 +5,8 @@ window.SITE = {
   tagline: "sound · research",
   email: "spsounddirectory@proton.me", // TODO: move to an address on the site's own domain
 
-  // The desktop's Ethos.txt, in Shilo's words.
-  ethos: `SPIRIT IS EVERYWHERE`,
-
-  // The desktop's Readme.txt: just the keys. {email} is filled in from above.
-  readme: `README.TXT
+  // The Start menu's Keys window.
+  keys: `KEYS
 
 ↑ ↓      files
 ← →      within a file

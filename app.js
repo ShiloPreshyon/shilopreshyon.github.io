@@ -708,8 +708,8 @@ $('dirUp').onclick = () => {
 const latest = S.collections[0];
 const launch = {
   work: () => openDir(null),
-  about: () => { openWin('w-about'); setHash('#/readme'); },
-  ethos: () => { openWin('w-ethos'); setHash('#/ethos'); },
+  about: () => { openWin('w-about'); loadReadMe(); setHash('#/readme'); },
+  keys: () => openWin('w-ethos'),
   contact: () => { openWin('w-mail'); setHash('#/contact'); },
   portal: () => openPortal(P.coll || latest),
   playlist: () => { openWin('w-list'); renderList(); setHash('#/playlist'); },
@@ -718,7 +718,7 @@ const launch = {
   bio: () => openDoc('bio'),
 };
 S.sections.forEach(s => launch['sec:' + s.id] = () => openDir('sec:' + s.id));
-const icons = [...S.sections.map(s => [s.title, s.icon, 'sec:' + s.id]), ['Readme.txt', 'doc', 'about'], ['Ethos.txt', 'doc', 'ethos'],
+const icons = [...S.sections.map(s => [s.title, s.icon, 'sec:' + s.id]), ['Read Me', 'doc', 'about'],
   ['Playlist', 'list', 'playlist'], ['Collage', 'layers', 'collage'],
   ['Contact', 'mail', 'contact'], ['Night Water', 'moon', 'portal']];
 icons.forEach(([n, ic, k]) => {
@@ -731,12 +731,26 @@ icons.forEach(([n, ic, k]) => {
   m.onclick = () => { $('startMenu').classList.add('hide'); $('bStart').classList.remove('on'); launch[k](); };
   $('smItems').appendChild(m);
 });
+{ // Start menu only: the keys
+  const m = document.createElement('button');
+  m.innerHTML = ICO.doc + '<span>Keys</span>';
+  m.onclick = () => { $('startMenu').classList.add('hide'); $('bStart').classList.remove('on'); launch.keys(); };
+  $('smItems').appendChild(m);
+}
 $('bStart').onclick = e => { e.stopPropagation(); $('bStart').classList.toggle('on', $('startMenu').classList.toggle('hide') === false); };
 document.addEventListener('pointerdown', e => {
   if (!$('startMenu').contains(e.target) && e.target !== $('bStart')) { $('startMenu').classList.add('hide'); $('bStart').classList.remove('on'); }
 });
-$('aboutTxt').textContent = S.readme.replace('{email}', S.email);
-$('ethosTxt').textContent = S.ethos;
+// Read Me is Shilo's own page: readme.txt in the repo, edited on GitHub (go to #/edit), so only Shilo can change it.
+const README_EDIT = 'https://github.com/ShiloPreshyon/shilopreshyon.github.io/edit/main/readme.txt';
+async function loadReadMe() {
+  try {
+    const r = await fetch(`readme.txt?t=${Date.now()}`, { cache: 'no-store' });
+    if (r.ok) $('aboutTxt').textContent = await r.text();
+  } catch (e) {}
+}
+loadReadMe();
+$('ethosTxt').textContent = S.keys.replace('{email}', S.email);
 $('mailLink').href = 'mailto:' + S.email; $('mailLink').textContent = S.email;
 document.querySelector('[data-ico=mail]').innerHTML = ICO.mail;
 
@@ -842,8 +856,8 @@ function setHash(h) { if (!routing && location.hash !== h) history.replaceState(
 function route() {
   routing = true;
   const p = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
-  if (p[0] === 'readme' || p[0] === 'about') launch.about();
-  else if (p[0] === 'ethos') launch.ethos();
+  if (p[0] === 'readme' || p[0] === 'about' || p[0] === 'ethos') launch.about();
+  else if (p[0] === 'edit') location.href = README_EDIT;
   else if (p[0] === 'contact') launch.contact();
   else if (S.docs[p[0]]) openDoc(p[0]);
   else if (p[0] === 'collage') {
