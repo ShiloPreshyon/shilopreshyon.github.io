@@ -6,16 +6,7 @@ window.SITE = {
   email: "spsounddirectory@proton.me", // TODO: move to an address on the site's own domain
 
   // The desktop's Ethos.txt, in Shilo's words.
-  ethos: `RECIPROCITY WITH MATERIALS AND PROCESS
-
-PLAY WITHOUT ATTACHMENT
-
-SPIRIT IS EVERYWHERE
-
-
-The past speaks through the archive.
-The present listens in the making.
-The future listener meets what remains.`,
+  ethos: `SPIRIT IS EVERYWHERE`,
 
   // The desktop's Readme.txt: just the keys. {email} is filled in from above.
   readme: `README.TXT
