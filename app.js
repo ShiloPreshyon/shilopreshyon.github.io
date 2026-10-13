@@ -755,7 +755,27 @@ loadReadMe();
 $('ethosTxt').textContent = S.keys.replace('{email}', S.email);
 // Write Me: a blank page for visitors. Nothing is stored or sent; closing the window lets it go.
 $('writeTxt').oninput = () => { const n = $('writeTxt').value.length; $('writeCount').textContent = `${n} character${n === 1 ? '' : 's'}`; };
-$('w-write').querySelector('[data-close]').addEventListener('click', () => { $('writeTxt').value = ''; $('writeTxt').oninput(); });
+$('w-write').querySelector('[data-close]').addEventListener('click', () => { $('writeTxt').value = ''; $('writeMsg').textContent = ''; $('writeTxt').oninput(); });
+// Send: forwarded to Shilo by Web3Forms. Anonymous unless the writer signs it. The hidden field catches bots.
+if (!S.writeMeKey) $('writeSend').parentElement.classList.add('hide');
+else $('writeNote').textContent = 'Kept nowhere unless you send it.';
+$('writeSend').onclick = async () => {
+  const text = $('writeTxt').value.trim();
+  if (!text || $('writeTrap').value) return;
+  if (text.length > 20000) { $('writeMsg').textContent = 'Too long to send (20,000 characters at most).'; return; }
+  $('writeSend').disabled = true; $('writeMsg').textContent = 'Sending…';
+  try {
+    const r = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ access_key: S.writeMeKey, subject: 'Write Me', from_name: 'Write Me', message: text }),
+    });
+    const j = await r.json();
+    if (!j.success) throw new Error(j.message);
+    $('writeTxt').value = ''; $('writeTxt').oninput();
+    $('writeMsg').textContent = 'Sent.';
+  } catch (e) { $('writeMsg').textContent = 'Could not send. Try again later.'; }
+  $('writeSend').disabled = false;
+};
 $('mailLink').href = 'mailto:' + S.email; $('mailLink').textContent = S.email;
 document.querySelector('[data-ico=mail]').innerHTML = ICO.mail;
 

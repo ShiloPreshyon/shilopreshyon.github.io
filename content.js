@@ -5,6 +5,10 @@ window.SITE = {
   tagline: "sound · research",
   email: "spsounddirectory@proton.me", // TODO: move to an address on the site's own domain
 
+  // Write Me letters are delivered by Web3Forms (web3forms.com), which keeps Shilo's address on its side. This key
+  // is public by design; it only lets the form send to that address. Empty = no Send button.
+  writeMeKey: "",
+
   // The Start menu's Keys window.
   keys: `KEYS
 

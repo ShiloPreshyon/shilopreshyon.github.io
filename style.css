@@ -163,3 +163,5 @@ a.mini { display: inline-block; text-align: center; text-decoration: none; color
 .dim { color: var(--lo); }
 textarea.write { display: block; width: 100%; resize: vertical; border-radius: 0; color: #000; outline: none;
   height: min(420px, calc(100vh - 220px)); min-height: 200px; }
+.trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.write-send { gap: 10px; }
