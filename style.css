@@ -161,3 +161,5 @@ table.coll td.pitch { white-space: nowrap; }
 table.coll td.pitch input[type=range] { width: 56px; margin-left: 4px; }
 a.mini { display: inline-block; text-align: center; text-decoration: none; color: #000; line-height: 13px; vertical-align: middle; }
 .dim { color: var(--lo); }
+textarea.write { display: block; width: 100%; resize: vertical; border-radius: 0; color: #000; outline: none;
+  height: min(420px, calc(100vh - 220px)); min-height: 200px; }

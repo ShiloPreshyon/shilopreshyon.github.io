@@ -576,6 +576,7 @@ function placeWindows() {
   set('w-coll', L + 30, 60, Math.min(700, W - L - 48));
   set('w-lic', L + 110, 120, Math.min(420, W - L - 130));
   set('w-ethos', Math.max(L + 40, W - rw - 60), 60, rw);
+  set('w-write', L + 60, 90, Math.min(520, W - L - 84));
 }
 document.querySelectorAll('.win').forEach(w => {
   w.addEventListener('pointerdown', () => focusWin(w));
@@ -710,6 +711,7 @@ const launch = {
   work: () => openDir(null),
   about: () => { openWin('w-about'); loadReadMe(); setHash('#/readme'); },
   keys: () => openWin('w-ethos'),
+  write: () => { openWin('w-write'); setHash('#/write'); setTimeout(() => $('writeTxt').focus(), 0); },
   contact: () => { openWin('w-mail'); setHash('#/contact'); },
   portal: () => openPortal(P.coll || latest),
   playlist: () => { openWin('w-list'); renderList(); setHash('#/playlist'); },
@@ -718,7 +720,7 @@ const launch = {
   bio: () => openDoc('bio'),
 };
 S.sections.forEach(s => launch['sec:' + s.id] = () => openDir('sec:' + s.id));
-const icons = [...S.sections.map(s => [s.title, s.icon, 'sec:' + s.id]), ['Read Me', 'doc', 'about'],
+const icons = [...S.sections.map(s => [s.title, s.icon, 'sec:' + s.id]), ['Read Me', 'doc', 'about'], ['Write Me', 'doc', 'write'],
   ['Playlist', 'list', 'playlist'], ['Collage', 'layers', 'collage'],
   ['Contact', 'mail', 'contact'], ['Night Water', 'moon', 'portal']];
 icons.forEach(([n, ic, k]) => {
@@ -751,6 +753,9 @@ async function loadReadMe() {
 }
 loadReadMe();
 $('ethosTxt').textContent = S.keys.replace('{email}', S.email);
+// Write Me: a blank page for visitors. Nothing is stored or sent; closing the window lets it go.
+$('writeTxt').oninput = () => { const n = $('writeTxt').value.length; $('writeCount').textContent = `${n} character${n === 1 ? '' : 's'}`; };
+$('w-write').querySelector('[data-close]').addEventListener('click', () => { $('writeTxt').value = ''; $('writeTxt').oninput(); });
 $('mailLink').href = 'mailto:' + S.email; $('mailLink').textContent = S.email;
 document.querySelector('[data-ico=mail]').innerHTML = ICO.mail;
 
@@ -858,6 +863,7 @@ function route() {
   const p = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (p[0] === 'readme' || p[0] === 'about' || p[0] === 'ethos') launch.about();
   else if (p[0] === 'edit') location.href = README_EDIT;
+  else if (p[0] === 'write') launch.write();
   else if (p[0] === 'contact') launch.contact();
   else if (S.docs[p[0]]) openDoc(p[0]);
   else if (p[0] === 'collage') {
