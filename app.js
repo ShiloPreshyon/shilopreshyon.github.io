@@ -671,14 +671,14 @@ function renderDir() {
     $('dirTitle').textContent = sec.title;
     $('dirAddr').textContent = `C:\\${sec.title}`;
     $('dirHead').innerHTML = folderHead;
-    sec.collections.forEach(k => rows.appendChild(row('folder', [k.sub ? `${k.title} — ${k.sub}` : k.title, k.items.length,
+    sec.collections.forEach(k => rows.appendChild(row('folder', [k.sub ? `${k.title} · ${k.sub}` : k.title, k.items.length,
       longFmt(totalLen(k.items)), 'File folder'], () => openDir(k.id))));
     $('dirCount').textContent = `${sec.collections.length} object(s)`;
     $('dirNote').textContent = sec.downloads ? 'Free to use · License.txt' : S.name;
     return;
   }
   const section = findSection(c.section);
-  $('dirTitle').textContent = c.sub ? `${c.title} — ${c.sub}` : c.title;
+  $('dirTitle').textContent = c.sub ? `${c.title} · ${c.sub}` : c.title;
   $('dirAddr').textContent = `C:\\${section.title}\\${c.title}`;
   const studio = c.kind === 'studio', samples = !!section.downloads;
   const addTh = `<th title="+ add to playlist · ⧉ add to collage${samples ? ' · ⤓ download' : ''}">+ ⧉${samples ? ' ⤓' : ''}</th>`;
@@ -690,14 +690,14 @@ function renderDir() {
   if (c.license) rows.appendChild(row('doc', ['License.txt', ...Array(cols - 2).fill(''), 'Text'], () => openLicense(c)));
   c.items.forEach((it, i) => {
     const cells = studio ? [it.title, it.artist || '', it.role || '', it.year || '', fmt(it.len)]
-      : samples ? [it.title, fmt(it.len), it.dl ? `FLAC ${it.dl.rate / 1000} kHz · ${mb(it.dl.size)}` : '—']
+      : samples ? [it.title, fmt(it.len), it.dl ? `FLAC ${it.dl.rate / 1000} kHz · ${mb(it.dl.size)}` : '']
       : [it.title, fmt(it.len), kindOf(it)];
     const dl = it.dl && { url: downloadUrl(it), name: it.dl.name, title: `Download ${it.dl.name} (lossless, ${it.dl.rate / 1000} kHz, ${mb(it.dl.size)})` };
     const tr = row('wav', cells, () => { openWin('w-play'); select(c, i); }, P.coll === c && P.idx === i, () => addToList(c, i), () => addLayer(c, i), dl);
     tr.dataset.i = i;
     rows.appendChild(tr);
   });
-  rows.appendChild(row('moon', [`${c.title} — Night Water`, ...Array(cols - 2).fill(''), 'Portal'], () => openPortal(c)));
+  rows.appendChild(row('moon', [`${c.title} · Night Water`, ...Array(cols - 2).fill(''), 'Portal'], () => openPortal(c)));
   $('dirCount').textContent = `${c.items.length + (c.license ? 2 : 1)} object(s)`;
   $('dirNote').textContent = c.note || (samples ? 'Free to use · License.txt' : S.name);
 }
@@ -780,7 +780,7 @@ $('mailLink').href = 'mailto:' + S.email; $('mailLink').textContent = S.email;
 document.querySelector('[data-ico=mail]').innerHTML = ICO.mail;
 
 function openLicense(c) {
-  $('licTitle').textContent = `License.txt — ${c.title}`;
+  $('licTitle').textContent = `License.txt · ${c.title}`;
   $('licTxt').textContent = S.licenses[c.license].replace('{email}', S.email);
   openWin('w-lic');
 }
@@ -792,7 +792,7 @@ function openDoc(k) {
   const d = S.docs[k];
   if (docOpen !== k) {
     $('docFrame').src = `${d.page}#embed`;
-    $('docTitle').textContent = `${d.title} — Viewer`;
+    $('docTitle').textContent = `${d.title} - Viewer`;
     $('w-doc').dataset.title = d.title;
     $('docOpen').href = d.pdf;
     $('docDl').href = d.pdf;
@@ -817,7 +817,7 @@ $('prog').onclick = e => { const r = $('prog').getBoundingClientRect(); seek((e.
 function ui() {
   const it = P.coll && P.coll.items[P.idx];
   const inList = P.lpos !== null ? ` (playlist ${P.lpos + 1}/${PL.entries.length})` : '';
-  $('playTitle').textContent = it ? `Now Playing — ${it.title}${inList}` : 'Now Playing';
+  $('playTitle').textContent = it ? `Now Playing · ${it.title}${inList}` : 'Now Playing';
   const lvl = it ? levelDb(P.coll, it) : 0;
   $('screenLbl').textContent = C.playing ? `COLLAGE ▸ ${C.nodes.size} LAYER${C.nodes.size === 1 ? '' : 'S'}` : !it ? 'NO SIGNAL' : P.error ? 'READ ERROR' : P.loading ? `LOADING ▸ ${it.title.toUpperCase()}` :
     `CH1 ▸ ${it.title.toUpperCase()}${lvl ? `  LVL ${lvl > 0 ? '+' : ''}${lvl.toFixed(1)} dB` : ''}${P.playing ? '' : '  ❚❚'}`;

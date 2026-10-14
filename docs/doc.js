@@ -17,7 +17,7 @@ async function finish(docName) {
   pages.forEach((p, i) => {
     const st = document.createElement('div');
     st.className = 'status';
-    st.innerHTML = `<div>Shilo Preshyon — ${esc(docName)}</div><div>2026</div><div>Page ${i + 1} of ${pages.length}</div>`;
+    st.innerHTML = `<div>Shilo Preshyon · ${esc(docName)}</div><div>2026</div><div>Page ${i + 1} of ${pages.length}</div>`;
     p.appendChild(st);
   });
   await document.fonts.ready;
